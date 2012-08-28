@@ -73,13 +73,7 @@ final class AndroidTestEngine extends ArcanistBaseUnitTestEngine {
         
         /* Checking to see if no paths were added */
         if (count($testPaths) == 0) {
-            echo "Unable to find test project. \n
-            Create with [~projectDir$ android create test-project -m ../ -p tests -n ProjNameTests";
-            $result = new ArcanistUnitTestResult();
-            $result->setResult(ArcanistUnitTestResult::RESULT_SKIP);
-            $result->setName("No tests found");
-            array_push($resultArray, $result);
-            return $resultArray;
+            throw new ArcanistNoEffectException("No tests to run.");
         }
         
         /* Trying to build for every project */

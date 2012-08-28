@@ -45,10 +45,7 @@ final class ArcanistAndroidLinter extends ArcanistLinter {
         
         list($err) = exec_manual('which %s', $lint_bin);
         if ($err) {
-            throw new ArcanistUsageException(
-            "Lint does not appear to be available on the path.".
-            "Make sure that the Android tools directory is part of ".
-            "your path.");
+            throw new ArcanistUsageException("Lint does not appear to be available on the path. Make sure that the Android tools directory is part of your path.");
         }
         
         return $lint_bin;
