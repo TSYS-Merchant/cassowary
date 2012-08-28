@@ -55,9 +55,7 @@ final class ArcanistOCLinter extends ArcanistLinter {
     public function lintPath($path) {
         list($err) = exec_manual('which oclint');
         if ($err) {
-            throw new ArcanistUsageException(
-            "OCLint does not appear to be available on the path.".
-            "Make sure that the OCLint is installed.");
+            throw new ArcanistUsageException("OCLint does not appear to be available on the path. Make sure that the OCLint is installed.");
         }
         
         $path_on_disk = $this->getEngine()->getFilePathOnDisk($path);
@@ -83,11 +81,6 @@ final class ArcanistOCLinter extends ArcanistLinter {
         } while (empty($ocLintPath));
         
         if(empty($ocLintPath)) {
-            $message = new ArcanistLintMessage();
-            $message->setCode('OCLint');
-            $message->setSeverity(ArcanistLintSeverity::SEVERITY_DISABLED);
-            $this->addLintMessage($message);
-            
             return;
         }
         
