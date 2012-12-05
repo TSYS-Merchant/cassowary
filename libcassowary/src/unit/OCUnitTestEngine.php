@@ -38,16 +38,14 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 final class OCUnitTestEngine extends ArcanistBaseUnitTestEngine {
     private $configFile;
     private $affectedTests;
-    private $projectRoot;
     
     public function run() {
-        $this->projectRoot = $this->getWorkingCopy()->getProjectRoot();
         $resultArray = array();
         $testPaths = array();
         
         /* Looking for project root directory */
         foreach ($this->getPaths() as $path) {
-            $rootPath = $this->projectRoot."/".$path;
+            $rootPath = $path;
             
             /* Checking all levels of path */
             do {
@@ -71,7 +69,7 @@ final class OCUnitTestEngine extends ArcanistBaseUnitTestEngine {
         /* Trying to build for every project */
         foreach ($testPaths as $path) {
             chdir($path);
-            exec("xcodebuild -scheme UnitTests -sdk iphonesimulator TEST_AFTER_BUILD=YES ARCHS=i386 clean build", $testOutput, $_);
+            exec("xcodebuild -target UnitTests -sdk iphonesimulator TEST_AFTER_BUILD=YES ARCHS=i386 clean build", $testOutput, $_);
             
             $testResult = $this->parseOutput($testOutput);
             $resultArray = array_merge($resultArray, $testResult);
