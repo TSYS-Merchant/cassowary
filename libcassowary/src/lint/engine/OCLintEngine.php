@@ -32,8 +32,8 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 /**
 * Utilize the OCLint lint utilities available at http://oclint.org/, at the time of
 * this writing v0.4.2 (https://github.com/downloads/longyiqi/oclint/oclint-0.4.2.pkg).
-* The engine assumes that the above package is installed on the user's machine and
-* available on the path.
+* Also use a few other core linters for cleanliness. The engine assumes that OCLint is
+* installed on the user's machine and available on the path.
 *
 * @group linter
 */
@@ -41,40 +41,35 @@ final class OCLintEngine extends ArcanistLintEngine {
     public function buildLinters() {
         $paths = $this->getPaths();
         
-        $linter = new ArcanistOCLinter();
+        $linters[] = id(new ArcanistFilenameLinter())->setPaths($paths);
         
-        foreach ($paths as $key => $path) {
-            if (!$this->pathExists($path)) {
-                unset($paths[$key]);
-            }
-        }
+        // skip directories and lint only regular files in remaining linters
+		foreach ($paths as $key => $path) {
+		    if ($this->getCommitHookMode()) {
+			    continue;
+		    }
+		  
+		    if (!is_file($this->getFilePathOnDisk($path))) {
+			    unset($paths[$key]);
+		    }
+		}
+		
+		$text_paths = preg_grep('/\.(h|m|sh|pch)$/', $paths);
+		$linters[] = id(new ArcanistGeneratedLinter())->setPaths($text_paths);
+        $linters[] = id(new ArcanistNoLintLinter())->setPaths($text_paths);
+        $linters[] = id(new ArcanistTextLinter())->setPaths($text_paths);
+        $linters[] = id(new ArcanistSpellingLinter())->setPaths($text_paths);
         
-        foreach ($paths as $path) {
-            // Only run OCLint linter on .m files
-            if (preg_match('/\.m$/', $path)) {
-                $linter->addPath($path);
-            }
-        }
+        $implementation_paths = preg_grep('/\.m$/', $paths);
+        $linters[] = id(new ArcanistOCLinter())->setPaths($implementation_paths);
         
         // allow for copyright license to be enforced for projects that opt in
         $check_copyright = $this->getWorkingCopy()->getConfig('check_copyright');
         if ($check_copyright) {
-        	$copyrightLinter = new ArcanistCustomLicenseLinter();
-        	foreach ($paths as $path) {
-				// Only run copyright linter on .h files
-				if (preg_match('/\.h$/', $path)) {
-					$copyrightLinter->addPath($path);
-				}
-			}
-			
-			return array(
-			$linter,
-			$copyrightLinter,
-			);
+            $header_paths = preg_grep('/\.h$/', $paths);
+            $linters[] = id(new ArcanistCustomLicenseLinter())->setPaths($header_paths);
         }
         
-        return array(
-        $linter,
-        );
+        return $linters;
     }
 }
