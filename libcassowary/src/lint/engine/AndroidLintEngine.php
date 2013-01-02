@@ -39,40 +39,35 @@ final class AndroidLintEngine extends ArcanistLintEngine {
     public function buildLinters() {
         $paths = $this->getPaths();
         
-        $linter = new ArcanistAndroidLinter();
+        $linters[] = id(new ArcanistFilenameLinter())->setPaths($paths);
         
-        foreach ($paths as $key => $path) {
-            if (!$this->pathExists($path)) {
-                unset($paths[$key]);
-            }
-        }
+        // skip directories and lint only regular files in remaining linters
+		foreach ($paths as $key => $path) {
+		    if ($this->getCommitHookMode()) {
+			    continue;
+		    }
+		  
+		    if (!is_file($this->getFilePathOnDisk($path))) {
+			    unset($paths[$key]);
+		    }
+		}
+		
+		$text_paths = preg_grep('/\.java$/', $paths);
+		$linters[] = id(new ArcanistGeneratedLinter())->setPaths($text_paths);
+        $linters[] = id(new ArcanistNoLintLinter())->setPaths($text_paths);
+        $linters[] = id(new ArcanistTextLinter())->setPaths($text_paths);
+        $linters[] = id(new ArcanistSpellingLinter())->setPaths($text_paths);
         
-        foreach ($paths as $path) {
-            // Only run Android linter on .java or .xml files
-            if (preg_match('/\.java$/', $path) || preg_match('/\.xml$/', $path)) {
-                $linter->addPath($path);
-            }
-        }
+        $android_paths = preg_grep('/\.(java|xml)$/', $paths);
+        $linters[] = id(new ArcanistAndroidLinter())->setPaths($android_paths);
         
         // allow for copyright license to be enforced for projects that opt in
         $check_copyright = $this->getWorkingCopy()->getConfig('check_copyright');
         if ($check_copyright) {
-        	$copyrightLinter = new ArcanistCustomLicenseLinter();
-        	foreach ($paths as $path) {
-				// Only run copyright linter on .h files
-				if (preg_match('/\.java$/', $path)) {
-					$copyrightLinter->addPath($path);
-				}
-			}
-			
-			return array(
-			$linter,
-			$copyrightLinter,
-			);
+            $header_paths = preg_grep('/\.java$/', $paths);
+            $linters[] = id(new ArcanistCustomLicenseLinter())->setPaths($header_paths);
         }
         
-        return array(
-        $linter,
-        );
+        return $linters;
     }
 }
