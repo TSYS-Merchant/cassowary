@@ -41,7 +41,7 @@ final class OCLintEngine extends ArcanistLintEngine {
     public function buildLinters() {
         $paths = $this->getPaths();
         
-        $linters[] = id(new ArcanistFilenameLinter())->setPaths($paths);
+        $linters[] = id(new ArcanistOCFilenameLinter())->setPaths($paths);
         
         // skip directories and lint only regular files in remaining linters
 		foreach ($paths as $key => $path) {
