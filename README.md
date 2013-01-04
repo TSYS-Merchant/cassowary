@@ -24,7 +24,7 @@ To use libcassowary edit your `.arcconfig` to look something like this:
 }
 ```
 
-You will need to clone this repository to somewhere in your project structure. iOS projects should use OCLintEngine and OCUnitTestEngine for linting and unit testing respectively. Android projects should use AndroidLintEngine and AndroidTestEngine.
+You will need to clone this repository to somewhere in your project structure. iOS projects should use OCLintEngine and OCUnitTestEngine for linting and unit testing respectively. Android projects should use AndroidLintEngine and AndroidTestEngine. .NET projects should use DotNetLintEngine.
 
 iOS Linting and Unit Testing
 ----------------------------
@@ -58,6 +58,11 @@ Android Linting and Unit Testing
 --------------------------------
 
 The Android developer tools provide linting and unit test capabilities out of the box. The Android lint tool will be automatically invoked for any XML or Java files if configured. For unit testing, all tests within a directory `tests` will be executed for an application. The Android unit tester does assume that a device is connected to execute the tests on.
+
+.NET Linting and Unit Testing
+--------------------------------
+
+As of right now only basic support is available but simple naming and text compliance checks are included for .NET projects (focusing towards MVC and Windows Phone 7 / 8).
 
 [0]: http://github.com/facebook/libphutil
 [1]: http://github.com/facebook/arcanist
