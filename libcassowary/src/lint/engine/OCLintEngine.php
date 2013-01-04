@@ -44,20 +44,21 @@ final class OCLintEngine extends ArcanistLintEngine {
         $linters[] = id(new ArcanistOCFilenameLinter())->setPaths($paths);
         
         // skip directories and lint only regular files in remaining linters
-		foreach ($paths as $key => $path) {
-		    if ($this->getCommitHookMode()) {
-			    continue;
-		    }
-		  
-		    if (!is_file($this->getFilePathOnDisk($path))) {
-			    unset($paths[$key]);
-		    }
-		}
-		
-		$text_paths = preg_grep('/\.(h|m|sh|pch)$/', $paths);
-		$linters[] = id(new ArcanistGeneratedLinter())->setPaths($text_paths);
+        foreach ($paths as $key => $path) {
+            if ($this->getCommitHookMode()) {
+                continue;
+            }
+          
+            if (!is_file($this->getFilePathOnDisk($path))) {
+                unset($paths[$key]);
+            }
+        }
+        
+        $text_paths = preg_grep('/\.(h|m|sh|pch)$/', $paths);
+        $linters[] = id(new ArcanistGeneratedLinter())->setPaths($text_paths);
         $linters[] = id(new ArcanistNoLintLinter())->setPaths($text_paths);
-        $linters[] = id(new ArcanistTextLinter())->setPaths($text_paths);
+        $linters[] = id(new ArcanistTextLinter())->setPaths($text_paths)
+                     ->setMaxLineLength(120);
         $linters[] = id(new ArcanistSpellingLinter())->setPaths($text_paths);
         
         $implementation_paths = preg_grep('/\.m$/', $paths);

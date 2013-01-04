@@ -79,10 +79,10 @@ EOLICENSE;
     
     protected function getLicensePatterns() {
         $maybe_script = '(#![^\n]+?[\n])?';
-		return array(
-		  "@^{$maybe_script}//[^\n]*Copyright[^\n]*[\n]\s*@i",
-		  "@^{$maybe_script}/[*](?:[^*]|[*][^/])*?Copyright.*?[*]/\s*@is",
-		  "@^{$maybe_script}\s*@",
-		);
+        return array(
+          "@^{$maybe_script}//[^\n]*Copyright[^\n]*[\n]\s*@i",
+          "@^{$maybe_script}/[*](?:[^*]|[*][^/])*?Copyright.*?[*]/\s*@is",
+          "@^{$maybe_script}\s*@",
+        );
     }
 }

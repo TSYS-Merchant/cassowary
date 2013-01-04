@@ -41,28 +41,28 @@ final class DotNetLintEngine extends ArcanistLintEngine {
         $linters[] = id(new ArcanistFilenameLinter())->setPaths($paths);
         
         // skip directories and lint only regular files in remaining linters
-		foreach ($paths as $key => $path) {
-		    if ($this->getCommitHookMode()) {
-			    continue;
-		    }
-		  
-		    if (!is_file($this->getFilePathOnDisk($path))) {
-			    unset($paths[$key]);
-		    }
-		}
-		
-		$text_paths = preg_grep('/\.(cs|cshtml|vb|vbhtml|sql)$/', $paths);
-		$linters[] = id(new ArcanistGeneratedLinter())->setPaths($text_paths);
+        foreach ($paths as $key => $path) {
+            if ($this->getCommitHookMode()) {
+                continue;
+            }
+          
+            if (!is_file($this->getFilePathOnDisk($path))) {
+                unset($paths[$key]);
+            }
+        }
+        
+        $text_paths = preg_grep('/\.(cs|cshtml|vb|vbhtml|sql)$/', $paths);
+        $linters[] = id(new ArcanistGeneratedLinter())->setPaths($text_paths);
         $linters[] = id(new ArcanistNoLintLinter())->setPaths($text_paths);
         $linters[] = id(new ArcanistTextLinter())->setPaths($text_paths)
-		             ->setCustomSeverityMap(
-					     array(
-					         ArcanistTextLinter::LINT_DOS_NEWLINE =>
-							     ArcanistLintSeverity::SEVERITY_DISABLED,
-						     ArcanistTextLinter::LINT_BAD_CHARSET =>
-							     ArcanistLintSeverity::SEVERITY_DISABLED
-					     )
-					)->setMaxLineLength(250);
+                     ->setCustomSeverityMap(
+                         array(
+                             ArcanistTextLinter::LINT_DOS_NEWLINE =>
+                                 ArcanistLintSeverity::SEVERITY_DISABLED,
+                             ArcanistTextLinter::LINT_BAD_CHARSET =>
+                                 ArcanistLintSeverity::SEVERITY_DISABLED
+                         )
+                    )->setMaxLineLength(250);
         $linters[] = id(new ArcanistSpellingLinter())->setPaths($text_paths);
         
         // allow for copyright license to be enforced for projects that opt in

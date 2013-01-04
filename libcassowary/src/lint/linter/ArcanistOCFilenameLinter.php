@@ -38,23 +38,23 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 final class ArcanistOCFilenameLinter extends ArcanistLinter {
     const LINT_BAD_FILENAME = 1;
 
-	public function willLintPaths(array $paths) {
-	    return;
-	}
-	
-	public function getLinterName() {
-	    return 'OCNAM';
-	}
-	
-	public function getLintSeverityMap() {
-	    return array();
-	}
-	
-	public function getLintNameMap() {
-	    return array(
-	        self::LINT_BAD_FILENAME => 'Bad Filename',
-	    );
-	}
+    public function willLintPaths(array $paths) {
+        return;
+    }
+    
+    public function getLinterName() {
+        return 'OCNAM';
+    }
+    
+    public function getLintSeverityMap() {
+        return array();
+    }
+    
+    public function getLintNameMap() {
+        return array(
+            self::LINT_BAD_FILENAME => 'Bad Filename',
+        );
+    }
   
     public function lintPath($path) {
         if (!preg_match('@^[a-z0-9~./\\\\_\@\+-]+$@i', $path)) {
