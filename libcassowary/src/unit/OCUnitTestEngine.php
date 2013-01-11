@@ -59,11 +59,11 @@ final class OCUnitTestEngine extends ArcanistBaseUnitTestEngine {
                 $last = strrchr($rootPath, "/");
                 $rootPath = str_replace($last, "", $rootPath);
             } while ($last);
-            
-            /* Final check on root path */
-            if (file_exists("./UnitTests") && !in_array($rootPath, $testPaths)) {
-                array_push($testPaths, ".");
-            }
+        }
+        
+        /* Final check on root path */
+        if (file_exists("./UnitTests") && !in_array(".", $testPaths)) {
+            array_push($testPaths, ".");
         }
         
         /* Checking to see if no paths were added */
