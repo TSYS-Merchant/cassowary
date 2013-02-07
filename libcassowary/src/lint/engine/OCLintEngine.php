@@ -2,7 +2,7 @@
 
 /*
 
-Copyright 2011-2012 iMobile3, LLC. All rights reserved.
+Copyright 2013 iMobile3, LLC. All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
 modification, is permitted provided that adherence to the following
@@ -31,9 +31,8 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 /**
 * Utilize the OCLint lint utilities available at http://oclint.org/, at the time of
-* this writing v0.4.2 (https://github.com/downloads/longyiqi/oclint/oclint-0.4.2.pkg).
-* Also use a few other core linters for cleanliness. The engine assumes that OCLint is
-* installed on the user's machine and available on the path.
+* this writing v0.6. Also use a few other core linters for cleanliness. The engine assumes
+* that OCLint is installed on the user's machine and available on the path.
 *
 * @group linter
 */

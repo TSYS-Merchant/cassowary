@@ -35,17 +35,16 @@ iOS Linting and Unit Testing
 #! /bin/bash
 
 ARCH=armv7
-SYSROOT=/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS5.1.sdk
-CLANG_INCLUDE=/usr/lib/clang/4.0/include
+SYSROOT=/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS6.1.sdk
 PCH_PATH=src/Prefix.pch
 
 INCLUDES=''
 for folder in `find . -type d`
 do
-  INCLUDES="$INCLUDES -I $folder"
+  INCLUDES="$INCLUDES -I$folder"
 done
 
-oclint -x objective-c -rc NUMBER_OF_PARAMETERS=10 -rc METHOD_LENGTH=300 -arch $ARCH -F . -isysroot=$SYSROOT -I $CLANG_INCLUDE $INCLUDES -include $PCH_PATH $1
+oclint -rc NUMBER_OF_PARAMETERS=10 -rc METHOD_LENGTH=180 $1 -- -x objective-c -arch $ARCH -F . -isysroot $SYSROOT -g -I$INCLUDES -include $PCH_PATH -c
 ```
 
 It may be necessary to edit this script based on your project needs and structure. See the [command line documentation][4] for more info.
@@ -68,4 +67,4 @@ As of right now only basic support is available but simple naming and text compl
 [1]: http://github.com/facebook/arcanist
 [2]: http://github.com/facebook/phabricator
 [3]: http://oclint.org
-[4]: http://oclint.org/docs/command/
+[4]: http://docs.oclint.org/en/dev/usage/oclint.html

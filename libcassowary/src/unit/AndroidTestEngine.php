@@ -1,7 +1,7 @@
 <?php
 
 /*
-Copyright 2011-2012 iMobile3, LLC. All rights reserved.
+Copyright 2013 iMobile3, LLC. All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
 modification, is permitted provided that adherence to the following

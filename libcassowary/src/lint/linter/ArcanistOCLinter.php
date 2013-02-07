@@ -2,7 +2,7 @@
 
 /*
 
-Copyright 2011-2012 iMobile3, LLC. All rights reserved.
+Copyright 2013 iMobile3, LLC. All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
 modification, is permitted provided that adherence to the following
@@ -31,7 +31,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 /**
 * Uses OCLint to detect various errors in Objective-C code. To use
-* this linter, you must install the OCLint package.
+* this linter, you must install OCLint.
 *
 * @group linter
 */
@@ -85,27 +85,27 @@ final class ArcanistOCLinter extends ArcanistLinter {
         }
         
         try {
-            exec("$ocLintPath $path_on_disk", $stdout, $_);
+            exec("sh $ocLintPath $path_on_disk", $stdout, $_);
             } catch (CommandException $e) {
             $stdout = $e->getStdout();
         }
         
         foreach ($stdout as $line) {
-            if($c = preg_match_all("/.*?(\\d+):.*?(\\d+): ((?:[a-z][a-z]+)):  *?(.*)/is", $line, $matches)) {
+            if($c = preg_match_all("/((?:\\/[\\w\\.\\-]+)+):(\\d+):(\\d+): (.*?) P(\\d+)((?:[a-zA-Z0-9 ]+))/is", $line, $matches)) {
                 $message = new ArcanistLintMessage();
                 $message->setPath($path);
-                $message->setLine($matches[1][0]);
-                $message->setChar($matches[2][0]);
-                $message->setCode('OCLint');
+                $message->setLine($matches[2][0]);
+                $message->setChar($matches[3][0]);
+                $message->setCode($matches[4][0]);
                 
-                if($matches[3][0] === 'error') {
+                if($matches[5][0] === 1) {
                     $message->setSeverity(ArcanistLintSeverity::SEVERITY_ERROR);
                 } else {
                     $message->setSeverity(ArcanistLintSeverity::SEVERITY_WARNING);
                 }
                 
                 $message->setName($matches[4][0]);
-                $message->setDescription($matches[4][0]);
+                $message->setDescription($matches[6][0]);
                 
                 $this->addLintMessage($message);
             }
