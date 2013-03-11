@@ -74,7 +74,8 @@ final class OCUnitTestEngine extends ArcanistBaseUnitTestEngine {
         /* Trying to build for every project */
         foreach ($testPaths as $path) {
             chdir($path);
-            exec("xcodebuild -target UnitTests -sdk iphonesimulator TEST_AFTER_BUILD=YES ARCHS=i386 clean build", $testOutput, $_);
+            
+            exec("xcodebuild -target UnitTests -sdk iphonesimulator TEST_AFTER_BUILD=YES clean build", $testOutput, $_);
             
             $testResult = $this->parseOutput($testOutput);
             $resultArray = array_merge($resultArray, $testResult);
@@ -84,23 +85,55 @@ final class OCUnitTestEngine extends ArcanistBaseUnitTestEngine {
     }
     
     private function parseOutput($testOutput) {
-        $state = 0;
-        $userData = null;
         $result = null;
         $resultArray = array();
         
+        /* Get build output directory, run gcov, and parse coverage results for all implementations */
+        exec("xcodebuild -target UnitTests -sdk iphonesimulator TEST_AFTER_BUILD=YES clean build -showBuildSettings | grep PROJECT_TEMP_DIR -m1 | grep -o '/.\+$'", $buildDirOutput, $_);
+        $buildDirOutput[0] .= "/Debug-iphonesimulator/UnitTests.build/Objects-normal/i386/";
+        chdir($buildDirOutput[0]);
+        exec("gcov * > /dev/null 2> /dev/null");
+        
+        $coverage = array();
+        foreach(glob("*.m.gcov") as $gcovFilename) {
+            $str = '';
+            
+            foreach(file($gcovFilename) as $gcovLine) {
+                if($g = preg_match_all("/.*?(.):.*?(\\d+)/is", $gcovLine, $gcovMatches) && $gcovMatches[2][0] > 0) {
+                    if($gcovMatches[1][0] === '#' || $gcovMatches[1][0] === '=') {
+                        $str .= 'U';
+                    } else if($gcovMatches[1][0] === '-') {
+                        $str .= 'N';
+                    } else if($gcovMatches[1][0] > 0) {
+                        $str .= 'C';
+                    } else {
+                        $str .= 'N';
+                    }
+                }
+            }
+            
+            foreach($this->getPaths() as $path) {
+                if(strpos($path, str_replace(".gcov", "", $gcovFilename)) !== false) {
+                    $coverage[$path] = $str;
+                }
+            }
+        }
+        
+        /* Iterate through test results and locate passes / failures */
         foreach($testOutput as $line) {
             if($c = preg_match_all("/.*?(\\[.*?\\]).*?((?:[a-z][a-z]+)).*?([+-]?\\d*\\.\\d+)(?![-+0-9\\.])/is", $line, $matches) && $matches[2][0] === 'passed') {
                 $result = new ArcanistUnitTestResult();
                 $result->setResult(ArcanistUnitTestResult::RESULT_PASS);
                 $result->setName($matches[1][0]);
                 $result->setDuration($matches[3][0]);
+                $result->setCoverage($coverage);
                 array_push($resultArray, $result);
             } else if($c = preg_match_all("/((?:\\/[\\w\\.\\-]+)+):.*?(\\d+):.*?((?:[a-z][a-z]+)):.*?(\\[.*?\\]).*? :  *?(.*)/is", $line, $matches) && $matches[3][0] === 'error') {
                 $result = new ArcanistUnitTestResult();
                 $result->setResult(ArcanistUnitTestResult::RESULT_FAIL);
                 $result->setName($matches[4][0]);
                 $result->setUserData($matches[5][0]);
+                $result->setCoverage($coverage);
                 array_push($resultArray, $result);
             }
         }
