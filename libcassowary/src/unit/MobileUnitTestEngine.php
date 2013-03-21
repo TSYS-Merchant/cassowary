@@ -28,23 +28,41 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 /**
-* AndroidUnit wrapper
+* Comprehensive linter that takes the various platform-specific linters
+* (OCUnit, Android) and combines them into one unified use case.
 *
 * To use, set unit_engine in .arcconfig, or use --engine flag
-* with arc unit. Currently supports only class & test files
-* (no directory support). Runs on top of android.test.InstrumentionTestRunner.
+* with arc unit.
 *
 * @group unitrun
 */
-final class AndroidTestEngine extends ArcanistBaseUnitTestEngine {
+final class MobileUnitTestEngine extends ArcanistBaseUnitTestEngine {
     private $projectRoot;
     
     public function run() {
         $this->projectRoot = $this->getWorkingCopy()->getProjectRoot();
         $resultArray = array();
-        $testPaths = array();
+        $iOSTestPaths = array();
+        $androidTestPaths = array();
         
         /* Looking for project root directory */
+        foreach ($this->getPaths() as $path) {
+            $rootPath = $path;
+            
+            /* Checking all levels of path */
+            do {
+                /* We only want projects that have UnitTests */
+                /* Only add path once per project */
+                if (file_exists($rootPath."/UnitTests") && !in_array($rootPath, $iOSTestPaths)) {
+                    array_push($iOSTestPaths, $rootPath);
+                }
+                
+                /* Stripping last level */
+                $last = strrchr($rootPath, "/");
+                $rootPath = str_replace($last, "", $rootPath);
+            } while ($last);
+        }
+        
         foreach ($this->getPaths() as $path) {
             $rootPath = $this->projectRoot."/".$path;
             
@@ -55,8 +73,8 @@ final class AndroidTestEngine extends ArcanistBaseUnitTestEngine {
                 /* Only add path once per project */
                 if (file_exists($rootPath."/AndroidManifest.xml")
                 && file_exists($rootPath."/tests")
-                && !in_array($rootPath, $testPaths)) {
-                    array_push($testPaths, $rootPath);
+                && !in_array($rootPath, $androidTestPaths)) {
+                    array_push($androidTestPaths, $rootPath);
                 }
                 
                 /* Stripping last level */
@@ -65,13 +83,27 @@ final class AndroidTestEngine extends ArcanistBaseUnitTestEngine {
             } while ($last);
         }
         
+        /* Final check on root path */
+        if (file_exists("./UnitTests") && !in_array(".", $iOSTestPaths)) {
+            array_push($iOSTestPaths, ".");
+        }
+        
         /* Checking to see if no paths were added */
-        if (count($testPaths) == 0) {
+        if (count($iOSTestPaths) == 0 && count($androidTestPaths) == 0) {
             throw new ArcanistNoEffectException("No tests to run.");
         }
         
         /* Trying to build for every project */
-        foreach ($testPaths as $path) {
+        foreach ($iOSTestPaths as $path) {
+            chdir($path);
+            
+            exec("xcodebuild -target UnitTests -sdk iphonesimulator TEST_AFTER_BUILD=YES clean build", $testOutput, $_);
+            
+            $testResult = $this->parseiOSOutput($testOutput);
+            $resultArray = array_merge($resultArray, $testResult);
+        }
+        
+        foreach ($androidTestPaths as $path) {
             /* Building Main Package */
             chdir($path);
             exec("ant clean");
@@ -94,7 +126,7 @@ final class AndroidTestEngine extends ArcanistBaseUnitTestEngine {
         }
         
         /* Installing packages */
-        foreach ($testPaths as $path) {
+        foreach ($androidTestPaths as $path) {
             /* Installing Main Package */
             chdir($path."/bin");
             exec("adb install -r *.apk");
@@ -106,7 +138,7 @@ final class AndroidTestEngine extends ArcanistBaseUnitTestEngine {
         }
         
         /* Running tests after parsing test package name */
-        foreach ($testPaths as $path) {
+        foreach ($androidTestPaths as $path) {
             chdir($path."/tests");
             
             $xml = simplexml_load_file("AndroidManifest.xml");
@@ -116,7 +148,7 @@ final class AndroidTestEngine extends ArcanistBaseUnitTestEngine {
             $testCommand = "adb shell am instrument -w ".$testPackage."/android.test.InstrumentationTestRunner";
             
             exec($testCommand, $testOutput, $result);
-            $testResult = $this->parseOutput($testOutput);
+            $testResult = $this->parseAndroidOutput($testOutput);
             $resultArray = array_merge($resultArray, $testResult);
             
             if ($result != 0) {
@@ -127,7 +159,64 @@ final class AndroidTestEngine extends ArcanistBaseUnitTestEngine {
         return $resultArray;
     }
     
-    private function parseOutput($testOutput) {
+    private function parseiOSOutput($testOutput) {
+        $result = null;
+        $resultArray = array();
+        
+        /* Get build output directory, run gcov, and parse coverage results for all implementations */
+        exec("xcodebuild -target UnitTests -sdk iphonesimulator TEST_AFTER_BUILD=YES clean build -showBuildSettings | grep PROJECT_TEMP_DIR -m1 | grep -o '/.\+$'", $buildDirOutput, $_);
+        $buildDirOutput[0] .= "/Debug-iphonesimulator/UnitTests.build/Objects-normal/i386/";
+        chdir($buildDirOutput[0]);
+        exec("gcov * > /dev/null 2> /dev/null");
+        
+        $coverage = array();
+        foreach(glob("*.m.gcov") as $gcovFilename) {
+            $str = '';
+            
+            foreach(file($gcovFilename) as $gcovLine) {
+                if($g = preg_match_all("/.*?(.):.*?(\\d+)/is", $gcovLine, $gcovMatches) && $gcovMatches[2][0] > 0) {
+                    if($gcovMatches[1][0] === '#' || $gcovMatches[1][0] === '=') {
+                        $str .= 'U';
+                    } else if($gcovMatches[1][0] === '-') {
+                        $str .= 'N';
+                    } else if($gcovMatches[1][0] > 0) {
+                        $str .= 'C';
+                    } else {
+                        $str .= 'N';
+                    }
+                }
+            }
+            
+            foreach($this->getPaths() as $path) {
+                if(strpos($path, str_replace(".gcov", "", $gcovFilename)) !== false) {
+                    $coverage[$path] = $str;
+                }
+            }
+        }
+        
+        /* Iterate through test results and locate passes / failures */
+        foreach($testOutput as $line) {
+            if($c = preg_match_all("/.*?(\\[.*?\\]).*?((?:[a-z][a-z]+)).*?([+-]?\\d*\\.\\d+)(?![-+0-9\\.])/is", $line, $matches) && $matches[2][0] === 'passed') {
+                $result = new ArcanistUnitTestResult();
+                $result->setResult(ArcanistUnitTestResult::RESULT_PASS);
+                $result->setName($matches[1][0]);
+                $result->setDuration($matches[3][0]);
+                $result->setCoverage($coverage);
+                array_push($resultArray, $result);
+            } else if($c = preg_match_all("/((?:\\/[\\w\\.\\-]+)+):.*?(\\d+):.*?((?:[a-z][a-z]+)):.*?(\\[.*?\\]).*? :  *?(.*)/is", $line, $matches) && $matches[3][0] === 'error') {
+                $result = new ArcanistUnitTestResult();
+                $result->setResult(ArcanistUnitTestResult::RESULT_FAIL);
+                $result->setName($matches[4][0]);
+                $result->setUserData($matches[5][0]);
+                $result->setCoverage($coverage);
+                array_push($resultArray, $result);
+            }
+        }
+        
+        return $resultArray;
+    }
+    
+    private function parseAndroidOutput($testOutput) {
         
         /* Parsing output from test program.
         Currently Android InstrumentationTestRunner does give option of nicely format output for report */

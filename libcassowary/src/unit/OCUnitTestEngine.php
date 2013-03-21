@@ -36,9 +36,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 * @group unitrun
 */
 final class OCUnitTestEngine extends ArcanistBaseUnitTestEngine {
-    private $configFile;
-    private $affectedTests;
-    
+
     public function run() {
         $resultArray = array();
         $testPaths = array();
