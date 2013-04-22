@@ -39,7 +39,7 @@ final class MobileLintEngine extends ArcanistLintEngine {
     public function buildLinters() {
         $paths = $this->getPaths();
         
-        $ios_paths = preg_grep('/\.(h|m|sh|pch)$/', $paths);
+        $ios_paths = preg_grep('/\.(h|m|sh|pch|png)$/', $paths);
         $linters[] = id(new ArcanistOCFilenameLinter())->setPaths($ios_paths);
         
         $non_ios_paths = preg_grep('/\.(h|m|sh|pch)$/', $paths, PREG_GREP_INVERT);
