@@ -42,7 +42,7 @@ final class MobileLintEngine extends ArcanistLintEngine {
         $ios_paths = preg_grep('/\.(h|m|sh|pch|png)$/', $paths);
         $linters[] = id(new ArcanistOCFilenameLinter())->setPaths($ios_paths);
         
-        $non_ios_paths = preg_grep('/\.(h|m|sh|pch)$/', $paths, PREG_GREP_INVERT);
+        $non_ios_paths = preg_grep('/\.(h|m|sh|pch|png)$/', $paths, PREG_GREP_INVERT);
         $linters[] = id(new ArcanistFilenameLinter())->setPaths($non_ios_paths);
         
         // skip directories and lint only regular files in remaining linters
