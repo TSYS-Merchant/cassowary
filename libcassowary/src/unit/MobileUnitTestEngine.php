@@ -97,9 +97,13 @@ final class MobileUnitTestEngine extends ArcanistBaseUnitTestEngine {
         foreach ($iOSTestPaths as $path) {
             chdir($path);
             
-            exec("xcodebuild -target UnitTests -sdk iphonesimulator TEST_AFTER_BUILD=YES clean build", $testOutput, $_);
+            exec(phutil_get_library_root("libcassowary").
+              "/../../externals/xctool/xctool.sh -find-target UnitTests -reporter phabricator:results.phab test");
+            $xctoolTestResults = json_decode(file_get_contents($path."/results.phab"), true);
+            unlink($path."/results.phab");
             
-            $testResult = $this->parseiOSOutput($testOutput);
+            $testResult = $this->parseiOSOutput($xctoolTestResults);
+
             $resultArray = array_merge($resultArray, $testResult);
         }
         
@@ -159,7 +163,7 @@ final class MobileUnitTestEngine extends ArcanistBaseUnitTestEngine {
         return $resultArray;
     }
     
-    private function parseiOSOutput($testOutput) {
+    private function parseiOSOutput($testResults) {
         $result = null;
         $resultArray = array();
         
@@ -195,22 +199,15 @@ final class MobileUnitTestEngine extends ArcanistBaseUnitTestEngine {
         }
         
         /* Iterate through test results and locate passes / failures */
-        foreach($testOutput as $line) {
-            if($c = preg_match_all("/.*?(\\[.*?\\]).*?((?:[a-z][a-z]+)).*?([+-]?\\d*\\.\\d+)(?![-+0-9\\.])/is", $line, $matches) && $matches[2][0] === 'passed') {
-                $result = new ArcanistUnitTestResult();
-                $result->setResult(ArcanistUnitTestResult::RESULT_PASS);
-                $result->setName($matches[1][0]);
-                $result->setDuration($matches[3][0]);
-                $result->setCoverage($coverage);
-                array_push($resultArray, $result);
-            } else if($c = preg_match_all("/((?:\\/[\\w\\.\\-]+)+):.*?(\\d+):.*?((?:[a-z][a-z]+)):.*?(\\[.*?\\]).*? :  *?(.*)/is", $line, $matches) && $matches[3][0] === 'error') {
-                $result = new ArcanistUnitTestResult();
-                $result->setResult(ArcanistUnitTestResult::RESULT_FAIL);
-                $result->setName($matches[4][0]);
-                $result->setUserData($matches[5][0]);
-                $result->setCoverage($coverage);
-                array_push($resultArray, $result);
-            }
+        foreach($testResults as $key => $testResultItem) {
+          $result = new ArcanistUnitTestResult();
+          $result->setResult($testResultItem['result']);
+          $result->setName($testResultItem['name']);
+          $result->setUserData($testResultItem['userdata']);
+          $result->setExtraData($testResultItem['extra']);
+          $result->setLink($testResultItem['link']);
+          $result->setCoverage($coverage);
+          array_push($resultArray, $result);
         }
         
         return $resultArray;
