@@ -61,7 +61,8 @@ final class MobileLintEngine extends ArcanistLintEngine {
         $linters[] = id(new ArcanistNoLintLinter())->setPaths($text_paths);
         $linters[] = id(new ArcanistSpellingLinter())->setPaths($text_paths);
         
-        $linters[] = id(new ArcanistTextLinter())->setPaths($ios_paths)
+        $ios_text_paths = preg_grep('/\.(h|m|sh|pch)$/', $paths);
+        $linters[] = id(new ArcanistTextLinter())->setPaths($ios_text_paths)
                      ->setMaxLineLength(120);
                      
         $ios_implementation_paths = preg_grep('/\.m$/', $paths);
