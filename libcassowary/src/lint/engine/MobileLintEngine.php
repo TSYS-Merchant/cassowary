@@ -68,7 +68,7 @@ final class MobileLintEngine extends ArcanistLintEngine {
                              ArcanistTextLinter::LINT_LINE_WRAP =>
                                  ArcanistLintSeverity::SEVERITY_ADVICE
                          )
-                     ->setMaxLineLength(120);
+                     )->setMaxLineLength(120);
                      
         $ios_implementation_paths = preg_grep('/\.m$/', $paths);
         $linters[] = id(new ArcanistOCLinter())->setPaths($ios_implementation_paths);
@@ -80,7 +80,7 @@ final class MobileLintEngine extends ArcanistLintEngine {
                              ArcanistTextLinter::LINT_LINE_WRAP =>
                                  ArcanistLintSeverity::SEVERITY_ADVICE
                          )
-                     ->setMaxLineLength(100);
+                     )->setMaxLineLength(100);
         $linters[] = id(new ArcanistAndroidLinter())->setPaths($android_paths);
                      
         $dotnet_paths = preg_grep('/\.(cs|cshtml|vb|vbhtml|sql)$/', $paths);

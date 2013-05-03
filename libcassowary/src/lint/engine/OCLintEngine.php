@@ -62,7 +62,7 @@ final class OCLintEngine extends ArcanistLintEngine {
                              ArcanistTextLinter::LINT_LINE_WRAP =>
                                  ArcanistLintSeverity::SEVERITY_ADVICE
                          )
-                     ->setMaxLineLength(120);
+                     )->setMaxLineLength(120);
         $linters[] = id(new ArcanistSpellingLinter())->setPaths($text_paths);
         
         $implementation_paths = preg_grep('/\.m$/', $paths);
