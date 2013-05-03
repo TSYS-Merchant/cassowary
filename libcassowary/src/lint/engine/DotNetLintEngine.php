@@ -60,7 +60,9 @@ final class DotNetLintEngine extends ArcanistLintEngine {
                              ArcanistTextLinter::LINT_DOS_NEWLINE =>
                                  ArcanistLintSeverity::SEVERITY_DISABLED,
                              ArcanistTextLinter::LINT_BAD_CHARSET =>
-                                 ArcanistLintSeverity::SEVERITY_DISABLED
+                                 ArcanistLintSeverity::SEVERITY_DISABLED,
+                             ArcanistTextLinter::LINT_LINE_WRAP =>
+                                 ArcanistLintSeverity::SEVERITY_ADVICE
                          )
                     )->setMaxLineLength(250);
         $linters[] = id(new ArcanistSpellingLinter())->setPaths($text_paths);

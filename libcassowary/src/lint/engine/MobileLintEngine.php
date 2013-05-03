@@ -63,6 +63,11 @@ final class MobileLintEngine extends ArcanistLintEngine {
         
         $ios_text_paths = preg_grep('/\.(h|m|sh|pch)$/', $paths);
         $linters[] = id(new ArcanistTextLinter())->setPaths($ios_text_paths)
+                     ->setCustomSeverityMap(
+                         array(
+                             ArcanistTextLinter::LINT_LINE_WRAP =>
+                                 ArcanistLintSeverity::SEVERITY_ADVICE
+                         )
                      ->setMaxLineLength(120);
                      
         $ios_implementation_paths = preg_grep('/\.m$/', $paths);
@@ -70,6 +75,11 @@ final class MobileLintEngine extends ArcanistLintEngine {
                      
         $android_paths = preg_grep('/\.(java|xml)$/', $paths);
         $linters[] = id(new ArcanistTextLinter())->setPaths($android_paths)
+                     ->setCustomSeverityMap(
+                         array(
+                             ArcanistTextLinter::LINT_LINE_WRAP =>
+                                 ArcanistLintSeverity::SEVERITY_ADVICE
+                         )
                      ->setMaxLineLength(100);
         $linters[] = id(new ArcanistAndroidLinter())->setPaths($android_paths);
                      
@@ -80,7 +90,9 @@ final class MobileLintEngine extends ArcanistLintEngine {
                              ArcanistTextLinter::LINT_DOS_NEWLINE =>
                                  ArcanistLintSeverity::SEVERITY_DISABLED,
                              ArcanistTextLinter::LINT_BAD_CHARSET =>
-                                 ArcanistLintSeverity::SEVERITY_DISABLED
+                                 ArcanistLintSeverity::SEVERITY_DISABLED,
+                             ArcanistTextLinter::LINT_LINE_WRAP =>
+                                 ArcanistLintSeverity::SEVERITY_ADVICE
                          )
                     )->setMaxLineLength(250);
         

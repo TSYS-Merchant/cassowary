@@ -56,6 +56,11 @@ final class AndroidLintEngine extends ArcanistLintEngine {
         $linters[] = id(new ArcanistGeneratedLinter())->setPaths($android_paths);
         $linters[] = id(new ArcanistNoLintLinter())->setPaths($android_paths);
         $linters[] = id(new ArcanistTextLinter())->setPaths($android_paths)
+                     ->setCustomSeverityMap(
+                         array(
+                             ArcanistTextLinter::LINT_LINE_WRAP =>
+                                 ArcanistLintSeverity::SEVERITY_ADVICE
+                         )
                      ->setMaxLineLength(100);
         $linters[] = id(new ArcanistSpellingLinter())->setPaths($android_paths);
         $linters[] = id(new ArcanistAndroidLinter())->setPaths($android_paths);

@@ -57,6 +57,11 @@ final class OCLintEngine extends ArcanistLintEngine {
         $linters[] = id(new ArcanistGeneratedLinter())->setPaths($text_paths);
         $linters[] = id(new ArcanistNoLintLinter())->setPaths($text_paths);
         $linters[] = id(new ArcanistTextLinter())->setPaths($text_paths)
+                     ->setCustomSeverityMap(
+                         array(
+                             ArcanistTextLinter::LINT_LINE_WRAP =>
+                                 ArcanistLintSeverity::SEVERITY_ADVICE
+                         )
                      ->setMaxLineLength(120);
         $linters[] = id(new ArcanistSpellingLinter())->setPaths($text_paths);
         
