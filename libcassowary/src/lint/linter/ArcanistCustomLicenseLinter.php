@@ -34,7 +34,23 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 *
 * @group linter
 */
-final class ArcanistCustomLicenseLinter extends ArcanistLicenseLinter {
+final class ArcanistCustomLicenseLinter extends ArcanistLinter {
+    const LINT_NO_LICENSE_HEADER = 1;
+
+    public function willLintPaths(array $paths) {
+        return;
+    }
+
+    public function getLintSeverityMap() {
+        return array();
+    }
+
+    public function getLintNameMap() {
+      return array(
+        self::LINT_NO_LICENSE_HEADER   => 'No License Header',
+      );
+    }
+  
     public function getLinterName() {
         return 'CustomLicense';
     }
@@ -78,11 +94,44 @@ EOLICENSE;
     }
     
     protected function getLicensePatterns() {
-        $maybe_script = '(#![^\n]+?[\n])?';
+        $maybe_script = '(#![^~\R~u]+?[~\R~u])?';
         return array(
-          "@^{$maybe_script}//[^\n]*Copyright[^\n]*[\n]\s*@i",
+          "@^{$maybe_script}//[^~\R~u]*Copyright[^~\R~u]*[~\R~u]\s*@i",
           "@^{$maybe_script}/[*](?:[^*]|[*][^/])*?Copyright.*?[*]/\s*@is",
           "@^{$maybe_script}\s*@",
         );
+    }
+    
+    public function lintPath($path) {
+        $copyright_holder = $this->getConfig('copyright_holder');
+        if ($copyright_holder === null) {
+            $working_copy = $this->getEngine()->getWorkingCopy();
+            $copyright_holder = $working_copy->getConfig('copyright_holder');
+        }
+
+        if (!$copyright_holder) {
+            return;
+        }
+
+        $patterns = $this->getLicensePatterns();
+        $license = $this->getLicenseText($copyright_holder);
+
+        $data = $this->getData($path);
+        $matches = 0;
+
+        foreach ($patterns as $pattern) {
+            if (preg_match($pattern, $data, $matches)) {
+                $expect = rtrim(implode('', array_slice($matches, 1)))."\r\n".$license;
+                if (trim($matches[0]) != trim($expect)) {
+                    $this->raiseLintAtOffset(
+                        0,
+                        self::LINT_NO_LICENSE_HEADER,
+                        'This file has a missing or out of date license header.',
+                        $matches[0],
+                        ltrim($expect));
+                }
+                break;
+            }
+        }
     }
 }

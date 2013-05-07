@@ -30,7 +30,7 @@ phutil_register_library_map(array(
     'AndroidLintEngine' => 'ArcanistLintEngine',
     'AndroidTestEngine' => 'ArcanistBaseUnitTestEngine',
     'ArcanistAndroidLinter' => 'ArcanistLinter',
-    'ArcanistCustomLicenseLinter' => 'ArcanistLicenseLinter',
+    'ArcanistCustomLicenseLinter' => 'ArcanistLinter',
     'ArcanistOCFilenameLinter' => 'ArcanistLinter',
     'ArcanistOCLinter' => 'ArcanistLinter',
     'DotNetLintEngine' => 'ArcanistLintEngine',
