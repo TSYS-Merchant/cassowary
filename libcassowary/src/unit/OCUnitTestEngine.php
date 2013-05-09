@@ -91,7 +91,8 @@ final class OCUnitTestEngine extends ArcanistBaseUnitTestEngine {
         $resultArray = array();
         
         /* Get build output directory, run gcov, and parse coverage results for all implementations */
-        exec("xcodebuild -target UnitTests -sdk iphonesimulator TEST_AFTER_BUILD=YES clean build -showBuildSettings | grep PROJECT_TEMP_DIR -m1 | grep -o '/.\+$'", $buildDirOutput, $_);
+        exec(phutil_get_library_root("libcassowary").
+              "/../../externals/xctool/xctool.sh -find-target UnitTests -showBuildSettings | grep PROJECT_TEMP_DIR -m1 | grep -o '/.\+$'", $buildDirOutput, $_);
         $buildDirOutput[0] .= "/Debug-iphonesimulator/UnitTests.build/Objects-normal/i386/";
         chdir($buildDirOutput[0]);
         exec("gcov * > /dev/null 2> /dev/null");

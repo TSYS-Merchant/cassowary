@@ -68,6 +68,42 @@ final class OCLintEngine extends ArcanistLintEngine {
         $implementation_paths = preg_grep('/\.m$/', $paths);
         $linters[] = id(new ArcanistOCLinter())->setPaths($implementation_paths);
         
+        // locate project directories and run static analysis
+        if(count($implementation_paths) > 0) {
+            $analysisPaths = array();
+        
+            foreach ($implementation_paths as $key => $path) {
+                $path_on_disk = $this->getFilePathOnDisk($path);
+                $currentDirectory = dirname($path_on_disk);
+                $analysisPath = NULL;
+                
+                do {
+                    if($currentDirectory === '/') {
+                        break;
+                    }
+            
+                    foreach(new DirectoryIterator($currentDirectory) as $file) {
+                        if(!$file->isFile()) {
+                            continue;
+                        }
+
+                        // if an oclint.sh file can be found we know we're in the correct place
+                        if($file->getFilename() === 'oclint.sh') {
+                            $analysisPath = $file->getPath();
+                        }
+                    }
+
+                    $currentDirectory = dirname($currentDirectory);
+                } while (empty($analysisPath));
+                
+                if($analysisPath != NULL && !in_array($analysisPath, $analysisPaths)) {
+                    $analysisPaths[] = $analysisPath;
+                }
+            }
+            
+            $linters[] = id(new ArcanistOCStaticAnalysisLinter())->setPaths($analysisPaths);
+        }
+        
         // allow for copyright license to be enforced for projects that opt in
         $check_copyright = $this->getWorkingCopy()->getConfig('check_copyright');
         if ($check_copyright) {
