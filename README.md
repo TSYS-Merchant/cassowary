@@ -59,12 +59,43 @@ Android Linting and Unit Testing
 The Android developer tools provide linting and unit test capabilities out of the box. The Android lint tool will be automatically invoked for any XML or Java files if configured. For unit testing, all tests within a directory `tests` will be executed for an application. The Android unit tester does assume that a device is connected to execute the tests on.
 
 .NET Linting and Unit Testing
---------------------------------
+-----------------------------
 
 As of right now only basic support is available but simple naming and text compliance checks are included for .NET projects (focusing towards MVC and Windows Phone 7 / 8).
+
+License / Support
+=================
+
+Copyright 2013 iMobile3, LLC. All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, is permitted provided that adherence to the following
+conditions is maintained. If you do not agree with these terms,
+please do not use, install, modify or redistribute this software.
+
+1. Redistributions of source code must retain the above copyright notice, this
+list of conditions and the following disclaimer.
+
+2. Redistributions in binary form must reproduce the above copyright notice,
+this list of conditions and the following disclaimer in the documentation
+and/or other materials provided with the distribution.
+
+THIS SOFTWARE IS PROVIDED BY IMOBILE3, LLC "AS IS" AND ANY EXPRESS OR
+IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
+EVENT SHALL IMOBILE3, LLC OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE
+OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
+ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+All contributions are welcome to improve the tools for more efficient, quality mobile development. Additional tools for code coverage, linting, and more provided graciously by [JetBrains][5] and their suite of applications and plugins under their open source support program.
 
 [0]: http://github.com/facebook/libphutil
 [1]: http://github.com/facebook/arcanist
 [2]: http://github.com/facebook/phabricator
 [3]: http://oclint.org
 [4]: http://docs.oclint.org/en/dev/usage/oclint.html
+[5]: http://www.jetbrains.com/
