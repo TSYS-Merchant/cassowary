@@ -131,11 +131,26 @@ final class MobileLintEngine extends ArcanistLintEngine {
                                  ArcanistLintSeverity::SEVERITY_ADVICE
                          )
                     )->setMaxLineLength(250);
+                    
+        $web_paths = preg_grep('/\.(php|css)$/', $paths);
+        $linters[] = id(new ArcanistTextLinter())->setPaths($web_paths)
+                     ->setCustomSeverityMap(
+                         array(
+                             ArcanistTextLinter::LINT_DOS_NEWLINE =>
+                                 ArcanistLintSeverity::SEVERITY_DISABLED,
+                             ArcanistTextLinter::LINT_BAD_CHARSET =>
+                                 ArcanistLintSeverity::SEVERITY_DISABLED,
+                             ArcanistTextLinter::LINT_LINE_WRAP =>
+                                 ArcanistLintSeverity::SEVERITY_ADVICE
+                         )
+                    )->setMaxLineLength(120);
+                    
+        $linters[] = id(new ArcanistXHPASTLinter())->setPaths(preg_grep('/\.php$/', $paths));
         
         // allow for copyright license to be enforced for projects that opt in
         $check_copyright = $this->getWorkingCopy()->getConfig('check_copyright');
         if ($check_copyright) {
-            $copyright_paths = preg_grep('/\.(cs|vb|java|h)$/', $paths);
+            $copyright_paths = preg_grep('/\.(cs|vb|java|h|php)$/', $paths);
             $linters[] = id(new ArcanistCustomLicenseLinter())->setPaths($copyright_paths);
         }
         
