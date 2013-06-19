@@ -94,12 +94,12 @@ EOLICENSE;
     }
     
     protected function getLicensePatterns() {
-        $maybe_script = '(#![^~\R~u]+?[~\R~u])?';
-        return array(
-          "@^{$maybe_script}//[^~\R~u]*Copyright[^~\R~u]*[~\R~u]\s*@i",
-          "@^{$maybe_script}/[*](?:[^*]|[*][^/])*?Copyright.*?[*]/\s*@is",
-          "@^{$maybe_script}\s*@",
-        );
+        $maybe_php_or_script = '(#![^\n]+?[\n])?(<[?]php\s+?)?';
+    return array(
+      "@^{$maybe_php_or_script}//[^\n]*Copyright[^\n]*[\n]\s*@i",
+      "@^{$maybe_php_or_script}/[*](?:[^*]|[*][^/])*?Copyright.*?[*]/\s*@is",
+      "@^{$maybe_php_or_script}\s*@",
+    );
     }
     
     public function lintPath($path) {
