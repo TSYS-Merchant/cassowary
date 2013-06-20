@@ -51,7 +51,7 @@ It may be necessary to edit this script based on your project needs and structur
 
 The iOS linter looks for this file and uses it as a reference point for linting individual files so make sure it exists otherwise no linting will occur.
 
-iOS unit testing leverages the OCUnit testing framework provided within Xcode. The unit test engine expects a scheme called `UnitTests` that exists for an Xcode project. All unit tests within that scheme will be executed.
+iOS unit testing leverages the OCUnit testing framework provided within Xcode and is built and executed using [xctool][5]. The unit test engine expects to find a file named `.xctool-args` that exists parallel to an Xcode project. All unit tests per that configuration will be executed; see the xctool documentation for how to configure its execution using this file.
 
 Android Linting and Unit Testing
 --------------------------------
@@ -91,11 +91,12 @@ LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE
 OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-All contributions are welcome to improve the tools for more efficient, quality mobile development. Additional tools for code coverage, linting, and more provided graciously by [JetBrains][5] and their suite of applications and plugins under their open source support program.
+All contributions are welcome to improve the tools for more efficient, quality mobile development. Additional tools for code coverage, linting, and more provided graciously by [JetBrains][6] and their suite of applications and plugins under their open source support program.
 
 [0]: http://github.com/facebook/libphutil
 [1]: http://github.com/facebook/arcanist
 [2]: http://github.com/facebook/phabricator
 [3]: http://oclint.org
 [4]: http://docs.oclint.org/en/dev/usage/oclint.html
-[5]: http://www.jetbrains.com/
+[5]: http://github.com/facebook/xctool
+[6]: http://www.jetbrains.com/

@@ -47,13 +47,14 @@ final class MobileUnitTestEngine extends ArcanistBaseUnitTestEngine {
         
         /* Looking for project root directory */
         foreach ($this->getPaths() as $path) {
-            $rootPath = $path;
+            $rootPath = $this->projectRoot."/".$path;
             
             /* Checking all levels of path */
             do {
-                /* We only want projects that have UnitTests */
+                /* Project root should have .xctool-args */
                 /* Only add path once per project */
-                if (file_exists($rootPath."/UnitTests") && !in_array($rootPath, $iOSTestPaths)) {
+                if (file_exists($rootPath."/.xctool-args")
+                && !in_array($rootPath, $iOSTestPaths)) {
                     array_push($iOSTestPaths, $rootPath);
                 }
                 
@@ -83,11 +84,6 @@ final class MobileUnitTestEngine extends ArcanistBaseUnitTestEngine {
             } while ($last);
         }
         
-        /* Final check on root path */
-        if (file_exists("./UnitTests") && !in_array(".", $iOSTestPaths)) {
-            array_push($iOSTestPaths, ".");
-        }
-        
         /* Checking to see if no paths were added */
         if (count($iOSTestPaths) == 0 && count($androidTestPaths) == 0) {
             throw new ArcanistNoEffectException("No tests to run.");
@@ -98,9 +94,9 @@ final class MobileUnitTestEngine extends ArcanistBaseUnitTestEngine {
             chdir($path);
             
             exec(phutil_get_library_root("libcassowary").
-              "/../../externals/xctool/xctool.sh -find-target UnitTests -reporter phabricator:results.phab test");
-            $xctoolTestResults = json_decode(file_get_contents($path."/results.phab"), true);
-            unlink($path."/results.phab");
+              "/../../externals/xctool/xctool.sh -reporter phabricator:/tmp/results.phab test");
+            $xctoolTestResults = json_decode(file_get_contents("/tmp/results.phab"), true);
+            unlink("/tmp/results.phab");
             
             $testResult = $this->parseiOSOutput($xctoolTestResults);
 
@@ -169,7 +165,7 @@ final class MobileUnitTestEngine extends ArcanistBaseUnitTestEngine {
         
         /* Get build output directory, run gcov, and parse coverage results for all implementations */
         exec(phutil_get_library_root("libcassowary").
-              "/../../externals/xctool/xctool.sh -find-target UnitTests -showBuildSettings | grep PROJECT_TEMP_DIR -m1 | grep -o '/.\+$'", $buildDirOutput, $_);
+              "xcodebuild -showBuildSettings | grep PROJECT_TEMP_DIR -m1 | grep -o '/.\+$'", $buildDirOutput, $_);
         $buildDirOutput[0] .= "/Debug-iphonesimulator/UnitTests.build/Objects-normal/i386/";
         chdir($buildDirOutput[0]);
         exec("gcov * > /dev/null 2> /dev/null");
