@@ -38,6 +38,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 final class OCUnitTestEngine extends ArcanistBaseUnitTestEngine {
 
     public function run() {
+        $this->projectRoot = $this->getWorkingCopy()->getProjectRoot();
         $resultArray = array();
         $testPaths = array();
         
