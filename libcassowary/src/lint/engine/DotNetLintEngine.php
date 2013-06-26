@@ -37,20 +37,20 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 final class DotNetLintEngine extends ArcanistLintEngine {
     public function buildLinters() {
         $paths = $this->getPaths();
-        
+
         $linters[] = id(new ArcanistFilenameLinter())->setPaths($paths);
-        
+
         // skip directories and lint only regular files in remaining linters
         foreach ($paths as $key => $path) {
             if ($this->getCommitHookMode()) {
                 continue;
             }
-          
+
             if (!is_file($this->getFilePathOnDisk($path))) {
                 unset($paths[$key]);
             }
         }
-        
+
         $text_paths = preg_grep('/\.(cs|cshtml|vb|vbhtml|sql)$/', $paths);
         $linters[] = id(new ArcanistGeneratedLinter())->setPaths($text_paths);
         $linters[] = id(new ArcanistNoLintLinter())->setPaths($text_paths);
@@ -63,17 +63,16 @@ final class DotNetLintEngine extends ArcanistLintEngine {
                                  ArcanistLintSeverity::SEVERITY_DISABLED,
                              ArcanistTextLinter::LINT_LINE_WRAP =>
                                  ArcanistLintSeverity::SEVERITY_ADVICE
-                         )
-                    )->setMaxLineLength(250);
+                         ))->setMaxLineLength(250);
         $linters[] = id(new ArcanistSpellingLinter())->setPaths($text_paths);
-        
+
         // allow for copyright license to be enforced for projects that opt in
         $check_copyright = $this->getWorkingCopy()->getConfig('check_copyright');
         if ($check_copyright) {
             $header_paths = preg_grep('/\.(cs|vb)$/', $paths);
             $linters[] = id(new ArcanistCustomLicenseLinter())->setPaths($header_paths);
         }
-        
+
         return $linters;
     }
 }

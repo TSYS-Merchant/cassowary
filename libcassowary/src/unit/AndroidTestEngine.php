@@ -38,16 +38,16 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 final class AndroidTestEngine extends ArcanistBaseUnitTestEngine {
     private $projectRoot;
-    
+
     public function run() {
         $this->projectRoot = $this->getWorkingCopy()->getProjectRoot();
         $resultArray = array();
         $testPaths = array();
-        
+
         /* Looking for project root directory */
         foreach ($this->getPaths() as $path) {
             $rootPath = $this->projectRoot."/".$path;
-            
+
             /* Checking all levels of path */
             do {
                 /* Project root should have AndroidManifest.xml */
@@ -58,18 +58,18 @@ final class AndroidTestEngine extends ArcanistBaseUnitTestEngine {
                 && !in_array($rootPath, $testPaths)) {
                     array_push($testPaths, $rootPath);
                 }
-                
+
                 /* Stripping last level */
                 $last = strrchr($rootPath, "/");
                 $rootPath = str_replace($last, "", $rootPath);
             } while ($last);
         }
-        
+
         /* Checking to see if no paths were added */
         if (count($testPaths) == 0) {
             throw new ArcanistNoEffectException("No tests to run.");
         }
-        
+
         /* Trying to build for every project */
         foreach ($testPaths as $path) {
             /* Building Main Package */
@@ -77,73 +77,73 @@ final class AndroidTestEngine extends ArcanistBaseUnitTestEngine {
             exec("ant clean");
             exec("android update project --path .");
             exec("ant debug -d", $output, $result);
-            
+
             if ($result != 0) {
                 print_r($output);
                 throw new RunTimeException("Unable to build using [ant debug]");
             }
-            
+
             /* Building Test Package */
             chdir($path . "/tests");
             exec("ant debug -d", $output, $result);
-            
+
             if ($result != 0) {
                 print_r($output);
                 throw new RunTimeException("Unable to build using [ant debug]");
             }
         }
-        
+
         /* Installing packages */
         foreach ($testPaths as $path) {
             /* Installing Main Package */
             chdir($path."/bin");
             exec("adb install -r *.apk");
-            
-            
+
+
             /* Installing test package */
             chdir($path."/tests/bin");
             exec("adb install -r *-debug.apk");
         }
-        
+
         /* Running tests after parsing test package name */
         foreach ($testPaths as $path) {
             chdir($path."/tests");
-            
+
             $xml = simplexml_load_file("AndroidManifest.xml");
-            
+
             $testPackage = $xml->attributes()->package;
-            
+
             $testCommand = "adb shell am instrument -w ".$testPackage."/android.test.InstrumentationTestRunner";
-            
+
             exec($testCommand, $testOutput, $result);
             $testResult = $this->parseOutput($testOutput);
             $resultArray = array_merge($resultArray, $testResult);
-            
+
             if ($result != 0) {
                 throw new RunTimeException("Unable to run command [".$testCommand."]"."\n".$testOutput);
             }
         }
-        
+
         return $resultArray;
     }
-    
+
     private function parseOutput($testOutput) {
-        
+
         /* Parsing output from test program.
         Currently Android InstrumentationTestRunner does give option of nicely format output for report */
-        
+
         $state = 0;
         $userData = null;
         $result = null;
         $resultArray = array();
-        
-        foreach($testOutput as $line) {
-            
+
+        foreach ($testOutput as $line) {
+
             switch ($state) {
                 /* Looking for test name */
                 case 0:
-                if ($line == ""){ break; }
-                
+                if ($line == "") { break; }
+
                 /* Parsing Failures
                 There can be several failures in one report */
                 $test = strstr($line, "Failure");
@@ -152,22 +152,22 @@ final class AndroidTestEngine extends ArcanistBaseUnitTestEngine {
                         $result = new ArcanistUnitTestResult();
                         $result->setResult(ArcanistUnitTestResult::RESULT_FAIL);
                     }
-                    
+
                     /* Getting test name. Should be in third position */
                     strtok($test, ' ');
                     strtok(' ');
                     $testName = strtok(' ');
                     $testName = str_replace(':', '', $testName);
-                    
+
                     /* Making sure not to grab this line which also contains Failure string */
                     if ($testName != "Errors") {
                         $state = 1;
                         $result->setName($testName);
                     }
-                    
+
                     break;
                 }
-                
+
                 /* Parsing OK
                 There can be several failures or 1 OK in report*/
                 $test = strstr($line, "OK (");
@@ -177,7 +177,7 @@ final class AndroidTestEngine extends ArcanistBaseUnitTestEngine {
                     $result->setName("All Unit Tests");
                     array_push($resultArray, $result);
                 }
-                
+
                 /* Parsing Error */
                 $test = strstr($line, "Error in ");
                 if ($test != false) {
@@ -185,29 +185,29 @@ final class AndroidTestEngine extends ArcanistBaseUnitTestEngine {
                     $result->setResult(ArcanistUnitTestResult::RESULT_BROKEN);
                     $state = 1;
                 }
-                
+
                 /* Looking for stack trace */
                 case 1:
-                
+
                 /* Reached the end of trace */
                 if ($line == "") {
                     $result->setUserData($userData);
                     array_push($resultArray, $result);
                     $result = null;
                     $userData = null;
-                    
+
                     $state = 0;
                 } else {
                     $userData .= $line."\n";
                 }
-                
+
                 break;
-                
+
                 default:
                 break;
             }
         }
-        
+
         return $resultArray;
     }
 }

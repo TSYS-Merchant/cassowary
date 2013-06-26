@@ -2,7 +2,7 @@
   "project_id" : "Cassowary",
   "conduit_uri" : "https://devportal.imobile3.com/",
   "phutil_libraries" : [
-    "../cassowary/libcassowary/src"
+    "/opt/cassowary/libcassowary/src"
   ],
   "lint.engine" : "MobileLintEngine",
   "unit.engine" : "MobileUnitTestEngine"

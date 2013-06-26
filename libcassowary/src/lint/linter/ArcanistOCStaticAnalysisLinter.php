@@ -38,45 +38,45 @@ final class ArcanistOCStaticAnalysisLinter extends ArcanistLinter {
     public function willLintPaths(array $paths) {
         return;
     }
-    
+
     public function getLinterName() {
         return 'OCStaticAnalysis';
     }
-    
+
     public function getLintSeverityMap() {
         return array();
     }
-    
+
     public function getLintNameMap() {
         return array();
     }
-    
+
     public function lintPath($path) {
         chdir($path);
-        
+
         exec(phutil_get_library_root("libcassowary").
               "/../../externals/xctool/xctool.sh -find-target UnitTests -sdk iphonesimulator -arch i386 -reporter json-stream clean build RUN_CLANG_STATIC_ANALYZER=YES", $stdout, $_);
         foreach ($stdout as $line) {
             $resultItem = json_decode($line, true);
-            
-            if(isset($resultItem['emittedOutputText']) && $c = preg_match_all("/((?:\\/[\\w\\.\\-]+)+):(\\d+):(\\d+): ((?:[a-z][a-z]+)): (\w+(\s+\w+)*)/is", $resultItem['emittedOutputText'], $matches)) {
+
+            if (isset($resultItem['emittedOutputText']) && $c = preg_match_all("/((?:\\/[\\w\\.\\-]+)+):(\\d+):(\\d+): ((?:[a-z][a-z]+)): (\w+(\s+\w+)*)/is", $resultItem['emittedOutputText'], $matches)) {
                 $message = new ArcanistLintMessage();
                 $message->setPath($matches[1][0]);
                 $message->setLine($matches[2][0]);
                 $message->setChar($matches[3][0]);
                 $message->setCode('CLANG');
 
-                if($matches[4][0] === "error") {
+                if ($matches[4][0] === "error") {
                     $message->setSeverity(ArcanistLintSeverity::SEVERITY_ERROR);
-                } else if($matches[4][0] === "warning") {
+                } else if ($matches[4][0] === "warning") {
                     $message->setSeverity(ArcanistLintSeverity::SEVERITY_WARNING);
                 } else {
                     $message->setSeverity(ArcanistLintSeverity::SEVERITY_ADVICE);
                 }
-                
+
                 $message->setName($matches[5][0]);
                 $message->setDescription($matches[5][0]);
-                
+
                 $this->addLintMessage($message);
             }
         }

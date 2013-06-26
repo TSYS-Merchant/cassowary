@@ -38,80 +38,78 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 final class ArcanistAndroidLinter extends ArcanistLinter {
     var $arc_lint_location = '';
-    
+
     private function getLintPath() {
         $lint_bin = "lint";
         $this->arc_lint_location = tempnam(sys_get_temp_dir(), 'arclint.xml');
-        
+
         list($err) = exec_manual('which %s', $lint_bin);
         if ($err) {
             throw new ArcanistUsageException("Lint does not appear to be available on the path. Make sure that the Android tools directory is part of your path.");
         }
-        
+
         return $lint_bin;
     }
-    
+
     public function willLintPaths(array $paths) {
         return;
     }
-    
+
     public function getLinterName() {
         return 'AndroidLint';
     }
-    
+
     public function getLintSeverityMap() {
         return array();
     }
-    
+
     public function getLintNameMap() {
         return array();
     }
-    
+
     public function lintPath($path) {
         $lint_bin = $this->getLintPath();
         $path_on_disk = $this->getEngine()->getFilePathOnDisk($path);
-        
+
         try {
             exec("{$lint_bin} --showall --nolines --quiet --xml {$this->arc_lint_location} {$path_on_disk}");
         }
         catch(CommandException $e) {
             return;
         }
-        
+
         $filexml = simplexml_load_file($this->arc_lint_location);
-        
+
         $messages = array();
         foreach ($filexml as $issue) {
             $loc_attrs = $issue->location->attributes();
             $issue_attrs = $issue->attributes();
-            
+
             $message = new ArcanistLintMessage();
             $message->setPath($loc_attrs->file);
             $message->setLine(intval($loc_attrs->line));
             $message->setChar(intval($loc_attrs->column));
             $message->setName($issue_attrs->id);
-            
+
             // Parsing Code stored in AndroidLint Message
             $code = strtok($issue_attrs->message, " ");
             $code = str_replace(array('[', ']'), "", $code);
             $message->setCode($code);
-            
+
             // Removing Code from AndroidLint Message
             $android_message = preg_replace("/\[.*?\]/", "", $issue_attrs->message);
             $message->setDescription($android_message);
-            
+
             // Setting Severity
-            if(strcmp($issue_attrs->severity,"Error") == 0)
-            {
+            if (strcmp($issue_attrs->severity, "Error") == 0) {
                 $message->setSeverity(ArcanistLintSeverity::SEVERITY_ERROR);
-            } else if(strcmp($issue_attrs->severity,"Warning") == 0)
-            {
+            } else if (strcmp($issue_attrs->severity, "Warning") == 0) {
                 $message->setSeverity(ArcanistLintSeverity::SEVERITY_WARNING);
             }
-            
+
             $this->addLintMessage($message);
         }
-        
+
         try {
             exec("rm {$this->arc_lint_location}");
         }

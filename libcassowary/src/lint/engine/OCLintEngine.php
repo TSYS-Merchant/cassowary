@@ -39,20 +39,20 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 final class OCLintEngine extends ArcanistLintEngine {
     public function buildLinters() {
         $paths = $this->getPaths();
-        
+
         $linters[] = id(new ArcanistOCFilenameLinter())->setPaths($paths);
-        
+
         // skip directories and lint only regular files in remaining linters
         foreach ($paths as $key => $path) {
             if ($this->getCommitHookMode()) {
                 continue;
             }
-          
+
             if (!is_file($this->getFilePathOnDisk($path))) {
                 unset($paths[$key]);
             }
         }
-        
+
         $text_paths = preg_grep('/\.(h|m|sh|pch)$/', $paths);
         $linters[] = id(new ArcanistGeneratedLinter())->setPaths($text_paths);
         $linters[] = id(new ArcanistNoLintLinter())->setPaths($text_paths);
@@ -61,56 +61,55 @@ final class OCLintEngine extends ArcanistLintEngine {
                          array(
                              ArcanistTextLinter::LINT_LINE_WRAP =>
                                  ArcanistLintSeverity::SEVERITY_ADVICE
-                         )
-                     )->setMaxLineLength(120);
+                         ))->setMaxLineLength(120);
         $linters[] = id(new ArcanistSpellingLinter())->setPaths($text_paths);
-        
+
         $implementation_paths = preg_grep('/\.m$/', $paths);
         $linters[] = id(new ArcanistOCLinter())->setPaths($implementation_paths);
-        
+
         // locate project directories and run static analysis
-        if(count($implementation_paths) > 0) {
+        if (count($implementation_paths) > 0) {
             $analysisPaths = array();
-        
+
             foreach ($implementation_paths as $key => $path) {
                 $path_on_disk = $this->getFilePathOnDisk($path);
                 $currentDirectory = dirname($path_on_disk);
-                $analysisPath = NULL;
-                
+                $analysisPath = null;
+
                 do {
-                    if($currentDirectory === '/') {
+                    if ($currentDirectory === '/') {
                         break;
                     }
-            
-                    foreach(new DirectoryIterator($currentDirectory) as $file) {
-                        if(!$file->isFile()) {
+
+                    foreach (new DirectoryIterator($currentDirectory) as $file) {
+                        if (!$file->isFile()) {
                             continue;
                         }
 
                         // if an oclint.sh file can be found we know we're in the correct place
-                        if($file->getFilename() === 'oclint.sh') {
+                        if ($file->getFilename() === 'oclint.sh') {
                             $analysisPath = $file->getPath();
                         }
                     }
 
                     $currentDirectory = dirname($currentDirectory);
                 } while (empty($analysisPath));
-                
-                if($analysisPath != NULL && !in_array($analysisPath, $analysisPaths)) {
+
+                if ($analysisPath != null && !in_array($analysisPath, $analysisPaths)) {
                     $analysisPaths[] = $analysisPath;
                 }
             }
-            
+
             $linters[] = id(new ArcanistOCStaticAnalysisLinter())->setPaths($analysisPaths);
         }
-        
+
         // allow for copyright license to be enforced for projects that opt in
         $check_copyright = $this->getWorkingCopy()->getConfig('check_copyright');
         if ($check_copyright) {
             $header_paths = preg_grep('/\.h$/', $paths);
             $linters[] = id(new ArcanistCustomLicenseLinter())->setPaths($header_paths);
         }
-        
+
         return $linters;
     }
 }

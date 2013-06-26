@@ -38,87 +38,85 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 final class MobileLintEngine extends ArcanistLintEngine {
     public function buildLinters() {
         $paths = $this->getPaths();
-        
+
         $ios_paths = preg_grep('/\.(h|m|sh|pch|png|xib|jpg)$/', $paths);
         $linters[] = id(new ArcanistOCFilenameLinter())->setPaths($ios_paths);
-        
+
         $non_ios_paths = preg_grep('/\.(h|m|sh|pch|png|xib|jpg)$/', $paths, PREG_GREP_INVERT);
         $linters[] = id(new ArcanistFilenameLinter())->setPaths($non_ios_paths);
-        
+
         // skip directories and lint only regular files in remaining linters
         foreach ($paths as $key => $path) {
             if ($this->getCommitHookMode()) {
                 continue;
             }
-          
+
             if (!is_file($this->getFilePathOnDisk($path))) {
                 unset($paths[$key]);
             }
         }
-        
+
         $text_paths = preg_grep('/\.(cs|cshtml|vb|vbhtml|sql|h|m|sh|pch|java|xml)$/', $paths);
         $linters[] = id(new ArcanistGeneratedLinter())->setPaths($text_paths);
         $linters[] = id(new ArcanistNoLintLinter())->setPaths($text_paths);
         $linters[] = id(new ArcanistSpellingLinter())->setPaths($text_paths);
-        
+
         $ios_text_paths = preg_grep('/\.(h|m|sh|pch)$/', $paths);
         $linters[] = id(new ArcanistTextLinter())->setPaths($ios_text_paths)
                      ->setCustomSeverityMap(
                          array(
                              ArcanistTextLinter::LINT_LINE_WRAP =>
                                  ArcanistLintSeverity::SEVERITY_ADVICE
-                         )
-                     )->setMaxLineLength(120);
-                     
+                         ))->setMaxLineLength(120);
+
         $ios_implementation_paths = preg_grep('/\.m$/', $paths);
         $linters[] = id(new ArcanistOCLinter())->setPaths($ios_implementation_paths);
-        
+
         // locate project directories and run static analysis
-        if(count($ios_implementation_paths) > 0) {
+        if (count($ios_implementation_paths) > 0) {
             $analysisPaths = array();
-        
+
             foreach ($ios_implementation_paths as $key => $path) {
                 $path_on_disk = $this->getFilePathOnDisk($path);
                 $currentDirectory = dirname($path_on_disk);
-                $analysisPath = NULL;
-                
+                $analysisPath = null;
+
                 do {
-                    if($currentDirectory === '/') {
+                    if ($currentDirectory === '/') {
                         break;
                     }
-            
-                    foreach(new DirectoryIterator($currentDirectory) as $file) {
-                        if(!$file->isFile()) {
+
+                    foreach (new DirectoryIterator($currentDirectory) as $file) {
+                        if (!$file->isFile()) {
                             continue;
                         }
 
                         // if an oclint.sh file can be found we know we're in the correct place
-                        if($file->getFilename() === 'oclint.sh') {
+                        if ($file->getFilename() === 'oclint.sh') {
                             $analysisPath = $file->getPath();
                         }
                     }
 
                     $currentDirectory = dirname($currentDirectory);
                 } while (empty($analysisPath));
-                
-                if($analysisPath != NULL && !in_array($analysisPath, $analysisPaths)) {
+
+                if ($analysisPath != null && !in_array($analysisPath, $analysisPaths)) {
                     $analysisPaths[] = $analysisPath;
                 }
             }
-            
+
             $linters[] = id(new ArcanistOCStaticAnalysisLinter())->setPaths($analysisPaths);
         }
-                     
+
         $android_paths = preg_grep('/\.(java|xml)$/', $paths);
         $linters[] = id(new ArcanistTextLinter())->setPaths($android_paths)
                      ->setCustomSeverityMap(
                          array(
                              ArcanistTextLinter::LINT_LINE_WRAP =>
                                  ArcanistLintSeverity::SEVERITY_ADVICE
-                         )
-                     )->setMaxLineLength(100);
+                         ))->setMaxLineLength(100);
         $linters[] = id(new ArcanistAndroidLinter())->setPaths($android_paths);
-                     
+
         $dotnet_paths = preg_grep('/\.(cs|cshtml|vb|vbhtml|sql)$/', $paths);
         $linters[] = id(new ArcanistTextLinter())->setPaths($dotnet_paths)
                      ->setCustomSeverityMap(
@@ -129,9 +127,8 @@ final class MobileLintEngine extends ArcanistLintEngine {
                                  ArcanistLintSeverity::SEVERITY_DISABLED,
                              ArcanistTextLinter::LINT_LINE_WRAP =>
                                  ArcanistLintSeverity::SEVERITY_ADVICE
-                         )
-                    )->setMaxLineLength(250);
-                    
+                         ))->setMaxLineLength(250);
+
         $web_paths = preg_grep('/\.(php|css)$/', $paths);
         $linters[] = id(new ArcanistTextLinter())->setPaths($web_paths)
                      ->setCustomSeverityMap(
@@ -142,18 +139,17 @@ final class MobileLintEngine extends ArcanistLintEngine {
                                  ArcanistLintSeverity::SEVERITY_DISABLED,
                              ArcanistTextLinter::LINT_LINE_WRAP =>
                                  ArcanistLintSeverity::SEVERITY_ADVICE
-                         )
-                    )->setMaxLineLength(120);
-                    
+                         ))->setMaxLineLength(120);
+
         $linters[] = id(new ArcanistXHPASTLinter())->setPaths(preg_grep('/\.php$/', $paths));
-        
+
         // allow for copyright license to be enforced for projects that opt in
         $check_copyright = $this->getWorkingCopy()->getConfig('check_copyright');
         if ($check_copyright) {
             $copyright_paths = preg_grep('/\.(cs|vb|java|h|php)$/', $paths);
             $linters[] = id(new ArcanistCustomLicenseLinter())->setPaths($copyright_paths);
         }
-        
+
         return $linters;
     }
 }

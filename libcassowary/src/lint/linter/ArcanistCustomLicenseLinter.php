@@ -50,11 +50,11 @@ final class ArcanistCustomLicenseLinter extends ArcanistLinter {
         self::LINT_NO_LICENSE_HEADER   => 'No License Header',
       );
     }
-  
+
     public function getLinterName() {
         return 'CustomLicense';
     }
-  
+
     protected function getLicenseText($copyright_holder) {
         $year = date('Y');
         $upper = strtoupper($copyright_holder);
@@ -92,7 +92,7 @@ final class ArcanistCustomLicenseLinter extends ArcanistLinter {
 
 EOLICENSE;
     }
-    
+
     protected function getLicensePatterns() {
         $maybe_php_or_script = '(#![^\n]+?[\n])?(<[?]php\s+?)?';
     return array(
@@ -101,7 +101,7 @@ EOLICENSE;
       "@^{$maybe_php_or_script}\s*@",
     );
     }
-    
+
     public function lintPath($path) {
         $copyright_holder = $this->getConfig('copyright_holder');
         if ($copyright_holder === null) {

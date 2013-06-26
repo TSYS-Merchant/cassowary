@@ -38,20 +38,20 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 final class AndroidLintEngine extends ArcanistLintEngine {
     public function buildLinters() {
         $paths = $this->getPaths();
-        
+
         $linters[] = id(new ArcanistFilenameLinter())->setPaths($paths);
-        
+
         // skip directories and lint only regular files in remaining linters
         foreach ($paths as $key => $path) {
             if ($this->getCommitHookMode()) {
                 continue;
             }
-          
+
             if (!is_file($this->getFilePathOnDisk($path))) {
                 unset($paths[$key]);
             }
         }
-        
+
         $android_paths = preg_grep('/\.(java|xml)$/', $paths);
         $linters[] = id(new ArcanistGeneratedLinter())->setPaths($android_paths);
         $linters[] = id(new ArcanistNoLintLinter())->setPaths($android_paths);
@@ -60,18 +60,17 @@ final class AndroidLintEngine extends ArcanistLintEngine {
                          array(
                              ArcanistTextLinter::LINT_LINE_WRAP =>
                                  ArcanistLintSeverity::SEVERITY_ADVICE
-                         )
-                     )->setMaxLineLength(100);
+                         ))->setMaxLineLength(100);
         $linters[] = id(new ArcanistSpellingLinter())->setPaths($android_paths);
         $linters[] = id(new ArcanistAndroidLinter())->setPaths($android_paths);
-        
+
         // allow for copyright license to be enforced for projects that opt in
         $check_copyright = $this->getWorkingCopy()->getConfig('check_copyright');
         if ($check_copyright) {
             $java_paths = preg_grep('/\.java$/', $paths);
             $linters[] = id(new ArcanistCustomLicenseLinter())->setPaths($java_paths);
         }
-        
+
         return $linters;
     }
 }
