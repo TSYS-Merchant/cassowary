@@ -30,12 +30,12 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 /**
-* Uses Android Lint to detect various errors in Java code. To use this linter,
-* you must install the Android SDK and configure which codes you want to be
-* reported as errors, warnings and advice.
-*
-* @group linter
-*/
+ * Uses Android Lint to detect various errors in Java code. To use this linter,
+ * you must install the Android SDK and configure which codes you want to be
+ * reported as errors, warnings and advice.
+ *
+ * @group linter
+ */
 final class ArcanistAndroidLinter extends ArcanistLinter {
     var $arc_lint_location = '';
 
@@ -73,48 +73,46 @@ final class ArcanistAndroidLinter extends ArcanistLinter {
 
         try {
             exec("{$lint_bin} --showall --nolines --quiet --xml {$this->arc_lint_location} {$path_on_disk}");
-        }
-        catch(CommandException $e) {
+        } catch (CommandException $e) {
             return;
         }
 
         $filexml = simplexml_load_file($this->arc_lint_location);
 
-        $messages = array();
+        if ($filexml->attributes()->format != '4') {
+            throw new ArcanistUsageException("Unsupported Android lint output version. Cassowary needs to be updated.");
+        }
+
         foreach ($filexml as $issue) {
             $loc_attrs = $issue->location->attributes();
             $issue_attrs = $issue->attributes();
 
             $message = new ArcanistLintMessage();
-            $message->setPath($loc_attrs->file);
+            $message->setPath($path);
             $message->setLine(intval($loc_attrs->line));
             $message->setChar(intval($loc_attrs->column));
-            $message->setName($issue_attrs->id);
-
-            // Parsing Code stored in AndroidLint Message
-            $code = strtok($issue_attrs->message, " ");
-            $code = str_replace(array('[', ']'), "", $code);
-            $message->setCode($code);
-
-            // Removing Code from AndroidLint Message
-            $android_message = preg_replace("/\[.*?\]/", "", $issue_attrs->message);
-            $message->setDescription($android_message);
+            $message->setName((string)$issue_attrs->id);
+            $message->setCode((string)$issue_attrs->category);
+            $message->setDescription(preg_replace('/^\[.*?\]\s*/', '', $issue_attrs->message));
 
             // Setting Severity
-            if (strcmp($issue_attrs->severity, "Error") == 0) {
+            if ($issue_attrs->severity == 'Error' || $issue_attrs->severity == 'Fatal') {
                 $message->setSeverity(ArcanistLintSeverity::SEVERITY_ERROR);
-            } else if (strcmp($issue_attrs->severity, "Warning") == 0) {
+            } else if ($issue_attrs->severity == 'Warning') {
                 $message->setSeverity(ArcanistLintSeverity::SEVERITY_WARNING);
+            } else {
+                $message->setSeverity(ArcanistLintSeverity::SEVERITY_ADVICE);
+            }
+
+            // Force XML files to always show warnings, since the Android linter doesn't always pick
+            // the best line numbers.
+            if (strtolower(pathinfo($path, PATHINFO_EXTENSION)) == 'xml') {
+                $message->setBypassChangedLineFiltering(true);
             }
 
             $this->addLintMessage($message);
         }
 
-        try {
-            exec("rm {$this->arc_lint_location}");
-        }
-        catch(CommandException $e) {
-            return;
-        }
+        unlink($this->arc_lint_location);
     }
 }
