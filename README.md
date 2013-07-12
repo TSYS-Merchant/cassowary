@@ -19,12 +19,12 @@ To use libcassowary edit your `.arcconfig` to look something like this:
   "phutil_libraries" : [
     "cassowary/libcassowary/src"
   ],
-  "lint.engine" : "OCLintEngine",
-  "unit.engine" : "OCUnitTestEngine"
+  "lint.engine" : "MobileLintEngine",
+  "unit.engine" : "MobileUnitTestEngine"
 }
 ```
 
-You will need to clone this repository to somewhere in your project structure. iOS projects should use OCLintEngine and OCUnitTestEngine for linting and unit testing respectively. Android projects should use AndroidLintEngine and AndroidTestEngine. .NET projects should use DotNetLintEngine.
+You will need to clone this repository to somewhere in your project structure. iOS projects should use OCLintEngine and OCUnitTestEngine for linting and unit testing respectively. Android projects should use AndroidLintEngine and AndroidTestEngine. .NET projects should use DotNetLintEngine. If you need support for several platforms in a hybrid repository, use MobileLintEngine and MobileUnitTestEngine.
 
 iOS Linting and Unit Testing
 ----------------------------
