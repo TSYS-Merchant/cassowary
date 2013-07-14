@@ -72,15 +72,19 @@ final class ArcanistAndroidLinter extends ArcanistLinter {
         $path_on_disk = $this->getEngine()->getFilePathOnDisk($path);
 
         try {
-            exec("{$lint_bin} --showall --nolines --quiet --xml {$this->arc_lint_location} {$path_on_disk}");
+            exec("{$lint_bin} --showall --nolines --fullpath --quiet --xml {$this->arc_lint_location} {$path_on_disk}");
         } catch (CommandException $e) {
             return;
         }
 
         $filexml = simplexml_load_file($this->arc_lint_location);
 
-        if ($filexml->attributes()->format != '4') {
-            throw new ArcanistUsageException("Unsupported Android lint output version. Cassowary needs to be updated.");
+        if ($filexml->attributes()->format < 4) {
+            throw new ArcanistUsageException("Unsupported Android lint output version. "
+            . "Please update your Android SDK to the latest version.");
+        } else if ($filexml->attributes()->format > 4) {
+            throw new ArcanistUsageException("Unsupported Android lint output version. "
+            . "Cassowary needs an update to match.");
         }
 
         foreach ($filexml as $issue) {
@@ -88,9 +92,14 @@ final class ArcanistAndroidLinter extends ArcanistLinter {
             $issue_attrs = $issue->attributes();
 
             $message = new ArcanistLintMessage();
-            $message->setPath($path);
-            $message->setLine(intval($loc_attrs->line));
-            $message->setChar(intval($loc_attrs->column));
+            $message->setPath($loc_attrs->file);
+            // Line number and column are irrelevant for artwork and other assets
+            if (isset($loc_attrs->line)) {
+                $message->setLine(intval($loc_attrs->line));
+            }
+            if (isset($loc_attrs->column)) {
+                $message->setChar(intval($loc_attrs->column));
+            }
             $message->setName((string)$issue_attrs->id);
             $message->setCode((string)$issue_attrs->category);
             $message->setDescription(preg_replace('/^\[.*?\]\s*/', '', $issue_attrs->message));
@@ -104,11 +113,8 @@ final class ArcanistAndroidLinter extends ArcanistLinter {
                 $message->setSeverity(ArcanistLintSeverity::SEVERITY_ADVICE);
             }
 
-            // Force XML files to always show warnings, since the Android linter doesn't always pick
-            // the best line numbers.
-            if (strtolower(pathinfo($path, PATHINFO_EXTENSION)) == 'xml') {
-                $message->setBypassChangedLineFiltering(true);
-            }
+            // Skip line number check, since we're linting the whole project
+            $message->setBypassChangedLineFiltering(true);
 
             $this->addLintMessage($message);
         }

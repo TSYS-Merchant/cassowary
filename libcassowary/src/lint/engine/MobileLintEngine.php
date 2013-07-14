@@ -30,13 +30,14 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 /**
-* Comprehensive linter that takes the various platform-specific linters
-* (OCUnit, Android, DotNet) and combines them into one unified use case.
-*
-* @group linter
-*/
+ * Comprehensive linter that takes the various platform-specific linters
+ * (OCUnit, Android, DotNet) and combines them into one unified use case.
+ *
+ * @group linter
+ */
 final class MobileLintEngine extends ArcanistLintEngine {
     public function buildLinters() {
+        $linters = array();
         $paths = $this->getPaths();
 
         $ios_paths = preg_grep('/\.(h|m|sh|pch|png|xib|jpg)$/', $paths);
@@ -63,11 +64,11 @@ final class MobileLintEngine extends ArcanistLintEngine {
 
         $ios_text_paths = preg_grep('/\.(h|m|sh|pch)$/', $paths);
         $linters[] = id(new ArcanistTextLinter())->setPaths($ios_text_paths)
-                     ->setCustomSeverityMap(
-                         array(
-                             ArcanistTextLinter::LINT_LINE_WRAP =>
-                                 ArcanistLintSeverity::SEVERITY_ADVICE
-                         ))->setMaxLineLength(120);
+                ->setCustomSeverityMap(
+                    array(
+                        ArcanistTextLinter::LINT_LINE_WRAP =>
+                        ArcanistLintSeverity::SEVERITY_ADVICE
+                    ))->setMaxLineLength(120);
 
         $ios_implementation_paths = preg_grep('/\.m$/', $paths);
         $linters[] = id(new ArcanistOCLinter())->setPaths($ios_implementation_paths);
@@ -110,36 +111,75 @@ final class MobileLintEngine extends ArcanistLintEngine {
 
         $android_paths = preg_grep('/\.(java|xml)$/', $paths);
         $linters[] = id(new ArcanistTextLinter())->setPaths($android_paths)
-                     ->setCustomSeverityMap(
-                         array(
-                             ArcanistTextLinter::LINT_LINE_WRAP =>
-                                 ArcanistLintSeverity::SEVERITY_ADVICE
-                         ))->setMaxLineLength(100);
-        $linters[] = id(new ArcanistAndroidLinter())->setPaths($android_paths);
+                ->setCustomSeverityMap(
+                    array(
+                        ArcanistTextLinter::LINT_LINE_WRAP =>
+                        ArcanistLintSeverity::SEVERITY_ADVICE
+                    ))->setMaxLineLength(100);
+
+        // locate project directories and run static analysis
+        if (count($android_paths) > 0) {
+            $analysisPaths = array();
+
+            foreach ($android_paths as $key => $path) {
+                $path_on_disk = $this->getFilePathOnDisk($path);
+                $currentDirectory = dirname($path_on_disk);
+                $analysisPath = null;
+
+                do {
+                    if ($currentDirectory === '/') {
+                        break;
+                    }
+
+                    foreach (new DirectoryIterator($currentDirectory) as $file) {
+                        if (!$file->isFile()) {
+                            continue;
+                        }
+
+                        // if an AndroidManifest.xml file can be found we know we're in the
+                        // correct place
+                        if ($file->getFilename() === 'AndroidManifest.xml') {
+                            $analysisPath = $file->getPath();
+                        }
+                    }
+
+                    $currentDirectory = dirname($currentDirectory);
+                } while (empty($analysisPath));
+
+                if ($analysisPath != null
+                        && !in_array($analysisPath, $analysisPaths)
+                        && preg_match('/tests$/', $analysisPath) == 0
+                ) {
+                    $analysisPaths[] = $analysisPath;
+                }
+            }
+
+            $linters[] = id(new ArcanistAndroidLinter())->setPaths($analysisPaths);
+        }
 
         $dotnet_paths = preg_grep('/\.(cs|cshtml|vb|vbhtml|sql)$/', $paths);
         $linters[] = id(new ArcanistTextLinter())->setPaths($dotnet_paths)
-                     ->setCustomSeverityMap(
-                         array(
-                             ArcanistTextLinter::LINT_DOS_NEWLINE =>
-                                 ArcanistLintSeverity::SEVERITY_DISABLED,
-                             ArcanistTextLinter::LINT_BAD_CHARSET =>
-                                 ArcanistLintSeverity::SEVERITY_DISABLED,
-                             ArcanistTextLinter::LINT_LINE_WRAP =>
-                                 ArcanistLintSeverity::SEVERITY_ADVICE
-                         ))->setMaxLineLength(250);
+                ->setCustomSeverityMap(
+                    array(
+                        ArcanistTextLinter::LINT_DOS_NEWLINE =>
+                        ArcanistLintSeverity::SEVERITY_DISABLED,
+                        ArcanistTextLinter::LINT_BAD_CHARSET =>
+                        ArcanistLintSeverity::SEVERITY_DISABLED,
+                        ArcanistTextLinter::LINT_LINE_WRAP =>
+                        ArcanistLintSeverity::SEVERITY_ADVICE
+                    ))->setMaxLineLength(250);
 
         $web_paths = preg_grep('/\.(php|css)$/', $paths);
         $linters[] = id(new ArcanistTextLinter())->setPaths($web_paths)
-                     ->setCustomSeverityMap(
-                         array(
-                             ArcanistTextLinter::LINT_DOS_NEWLINE =>
-                                 ArcanistLintSeverity::SEVERITY_DISABLED,
-                             ArcanistTextLinter::LINT_BAD_CHARSET =>
-                                 ArcanistLintSeverity::SEVERITY_DISABLED,
-                             ArcanistTextLinter::LINT_LINE_WRAP =>
-                                 ArcanistLintSeverity::SEVERITY_ADVICE
-                         ))->setMaxLineLength(120);
+                ->setCustomSeverityMap(
+                    array(
+                        ArcanistTextLinter::LINT_DOS_NEWLINE =>
+                        ArcanistLintSeverity::SEVERITY_DISABLED,
+                        ArcanistTextLinter::LINT_BAD_CHARSET =>
+                        ArcanistLintSeverity::SEVERITY_DISABLED,
+                        ArcanistTextLinter::LINT_LINE_WRAP =>
+                        ArcanistLintSeverity::SEVERITY_ADVICE
+                    ))->setMaxLineLength(120);
 
         $linters[] = id(new ArcanistXHPASTLinter())->setPaths(preg_grep('/\.php$/', $paths));
 
