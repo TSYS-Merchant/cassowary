@@ -39,71 +39,75 @@ final class OCUnitTestEngine extends ArcanistBaseUnitTestEngine {
 
     public function run() {
         $this->projectRoot = $this->getWorkingCopy()->getProjectRoot();
-        $resultArray = array();
-        $testPaths = array();
+        $result_array = array();
+        $test_paths = array();
 
         /* Looking for project root directory */
         foreach ($this->getPaths() as $path) {
-            $rootPath = $this->projectRoot."/".$path;
+            $root_path = $this->projectRoot."/".$path;
 
             /* Checking all levels of path */
             do {
                 /* Project root should have .xctool-args */
                 /* Only add path once per project */
-                if (file_exists($rootPath."/.xctool-args")
-                && !in_array($rootPath, $testPaths)) {
-                    array_push($testPaths, $rootPath);
+                if (file_exists($root_path."/.xctool-args")
+                && !in_array($root_path, $test_paths)) {
+                    array_push($test_paths, $root_path);
                 }
 
                 /* Stripping last level */
-                $last = strrchr($rootPath, "/");
-                $rootPath = str_replace($last, "", $rootPath);
+                $last = strrchr($root_path, "/");
+                $root_path = str_replace($last, "", $root_path);
             } while ($last);
         }
 
         /* Checking to see if no paths were added */
-        if (count($testPaths) == 0) {
+        if (count($test_paths) == 0) {
             throw new ArcanistNoEffectException("No tests to run.");
         }
 
         /* Trying to build for every project */
-        foreach ($testPaths as $path) {
+        foreach ($test_paths as $path) {
             chdir($path);
 
+            $result_location = tempnam(sys_get_temp_dir(), 'arctestresults.phab');
             exec(phutil_get_library_root("libcassowary").
-              "/../../externals/xctool/xctool.sh -reporter phabricator:/tmp/results.phab test");
-            $xctoolTestResults = json_decode(file_get_contents("/tmp/results.phab"), true);
-            unlink("/tmp/results.phab");
+              "/../../externals/xctool/xctool.sh -reporter phabricator:".$result_location." test");
+            $xctool_test_results = json_decode(file_get_contents($result_location), true);
+            unlink($result_location);
 
-            $testResult = $this->parseOutput($xctoolTestResults);
+            $test_result = $this->parseOutput($xctool_test_results);
 
-            $resultArray = array_merge($resultArray, $testResult);
+            $result_array = array_merge($result_array, $test_result);
         }
 
-        return $resultArray;
+        return $result_array;
     }
 
-    private function parseOutput($testResults) {
+    private function parseOutput($test_results) {
         $result = null;
-        $resultArray = array();
+        $result_array = array();
 
         /* Get build output directory, run gcov, and parse coverage results for all implementations */
-        exec("xcodebuild -showBuildSettings | grep PROJECT_TEMP_DIR -m1 | grep -o '/.\+$'", $buildDirOutput, $_);
-        $buildDirOutput[0] .= "/Debug-iphonesimulator/UnitTests.build/Objects-normal/i386/";
-        chdir($buildDirOutput[0]);
+        $build_dir_output = array();
+        $_ = 0;
+        exec("xcodebuild -showBuildSettings | grep PROJECT_TEMP_DIR -m1 | grep -o '/.\+$'", $build_dir_output, $_);
+        $build_dir_output[0] .= "/Debug-iphonesimulator/UnitTests.build/Objects-normal/i386/";
+        chdir($build_dir_output[0]);
         exec("gcov * > /dev/null 2> /dev/null");
 
         $coverage = array();
-        foreach (glob("*.m.gcov") as $gcovFilename) {
+        foreach (glob("*.m.gcov") as $gcov_filename) {
             $str = '';
 
-            foreach (file($gcovFilename) as $gcovLine) {
-                if ($g = preg_match_all("/.*?(.):.*?(\\d+)/is", $gcovLine, $gcovMatches) && $gcovMatches[2][0] > 0) {
-                    if ($gcovMatches[1][0] === '#' || $gcovMatches[1][0] === '=') {
+            foreach (file($gcov_filename) as $gcov_line) {
+                $gcov_matches = array();
+                if ($g = preg_match_all("/.*?(.):.*?(\\d+)/is", $gcov_line, $gcov_matches) && $gcov_matches[2][0] > 0) {
+                    if ($gcov_matches[1][0] === '#' || $gcov_matches[1][0] === '=') {
                         $str .= 'U';
-                    } else if ($gcovMatches[1][0] === '-') {
+                    } else if ($gcov_matches[1][0] === '-') {
                         $str .= 'N';
-                    } else if ($gcovMatches[1][0] > 0) {
+                    } else if ($gcov_matches[1][0] > 0) {
                         $str .= 'C';
                     } else {
                         $str .= 'N';
@@ -112,24 +116,24 @@ final class OCUnitTestEngine extends ArcanistBaseUnitTestEngine {
             }
 
             foreach ($this->getPaths() as $path) {
-                if (strpos($path, str_replace(".gcov", "", $gcovFilename)) !== false) {
+                if (strpos($path, str_replace(".gcov", "", $gcov_filename)) !== false) {
                     $coverage[$path] = $str;
                 }
             }
         }
 
         /* Iterate through test results and locate passes / failures */
-        foreach ($testResults as $key => $testResultItem) {
+        foreach ($test_results as $key => $test_result_item) {
           $result = new ArcanistUnitTestResult();
-          $result->setResult($testResultItem['result']);
-          $result->setName($testResultItem['name']);
-          $result->setUserData($testResultItem['userdata']);
-          $result->setExtraData($testResultItem['extra']);
-          $result->setLink($testResultItem['link']);
+          $result->setResult($test_result_item['result']);
+          $result->setName($test_result_item['name']);
+          $result->setUserData($test_result_item['userdata']);
+          $result->setExtraData($test_result_item['extra']);
+          $result->setLink($test_result_item['link']);
           $result->setCoverage($coverage);
-          array_push($resultArray, $result);
+          array_push($result_array, $result);
         }
 
-        return $resultArray;
+        return $result_array;
     }
 }

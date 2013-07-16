@@ -41,41 +41,44 @@ final class AndroidTestEngine extends ArcanistBaseUnitTestEngine {
 
     public function run() {
         $this->projectRoot = $this->getWorkingCopy()->getProjectRoot();
-        $resultArray = array();
-        $testPaths = array();
+        $result_array = array();
+        $test_paths = array();
 
         /* Looking for project root directory */
         foreach ($this->getPaths() as $path) {
-            $rootPath = $this->projectRoot."/".$path;
+            $root_path = $this->projectRoot."/".$path;
 
             /* Checking all levels of path */
             do {
                 /* Project root should have AndroidManifest.xml */
                 /* We only want projects that have tests */
                 /* Only add path once per project */
-                if (file_exists($rootPath."/AndroidManifest.xml")
-                && file_exists($rootPath."/tests")
-                && !in_array($rootPath, $testPaths)) {
-                    array_push($testPaths, $rootPath);
+                if (file_exists($root_path."/AndroidManifest.xml")
+                && file_exists($root_path."/tests")
+                && !in_array($root_path, $test_paths)) {
+                    array_push($test_paths, $root_path);
                 }
 
                 /* Stripping last level */
-                $last = strrchr($rootPath, "/");
-                $rootPath = str_replace($last, "", $rootPath);
+                $last = strrchr($root_path, "/");
+                $root_path = str_replace($last, "", $root_path);
             } while ($last);
         }
 
         /* Checking to see if no paths were added */
-        if (count($testPaths) == 0) {
+        if (count($test_paths) == 0) {
             throw new ArcanistNoEffectException("No tests to run.");
         }
 
         /* Trying to build for every project */
-        foreach ($testPaths as $path) {
+        foreach ($test_paths as $path) {
             /* Building Main Package */
             chdir($path);
             exec("ant clean");
             exec("android update project --path .");
+
+            $output = array();
+            $result = 0;
             exec("ant debug -d", $output, $result);
 
             if ($result != 0) {
@@ -94,7 +97,7 @@ final class AndroidTestEngine extends ArcanistBaseUnitTestEngine {
         }
 
         /* Installing packages */
-        foreach ($testPaths as $path) {
+        foreach ($test_paths as $path) {
             /* Installing Main Package */
             chdir($path."/bin");
             exec("adb install -r *.apk");
@@ -106,38 +109,40 @@ final class AndroidTestEngine extends ArcanistBaseUnitTestEngine {
         }
 
         /* Running tests after parsing test package name */
-        foreach ($testPaths as $path) {
+        foreach ($test_paths as $path) {
             chdir($path."/tests");
 
             $xml = simplexml_load_file("AndroidManifest.xml");
 
-            $testPackage = $xml->attributes()->package;
+            $test_package = $xml->attributes()->package;
 
-            $testCommand = "adb shell am instrument -w ".$testPackage."/android.test.InstrumentationTestRunner";
+            $test_command = "adb shell am instrument -w ".$test_package."/android.test.InstrumentationTestRunner";
 
-            exec($testCommand, $testOutput, $result);
-            $testResult = $this->parseOutput($testOutput);
-            $resultArray = array_merge($resultArray, $testResult);
+            $test_output = array();
+            $result = 0;
+            exec($test_command, $test_output, $result);
+            $test_result = $this->parseOutput($test_output);
+            $result_array = array_merge($result_array, $test_result);
 
             if ($result != 0) {
-                throw new RunTimeException("Unable to run command [".$testCommand."]"."\n".$testOutput);
+                throw new RunTimeException("Unable to run command [".$test_command."]"."\n".$test_output);
             }
         }
 
-        return $resultArray;
+        return $result_array;
     }
 
-    private function parseOutput($testOutput) {
+    private function parseOutput($test_output) {
 
         /* Parsing output from test program.
         Currently Android InstrumentationTestRunner does give option of nicely format output for report */
 
         $state = 0;
-        $userData = null;
+        $user_data = null;
         $result = null;
-        $resultArray = array();
+        $result_array = array();
 
-        foreach ($testOutput as $line) {
+        foreach ($test_output as $line) {
 
             switch ($state) {
                 /* Looking for test name */
@@ -156,13 +161,13 @@ final class AndroidTestEngine extends ArcanistBaseUnitTestEngine {
                     /* Getting test name. Should be in third position */
                     strtok($test, ' ');
                     strtok(' ');
-                    $testName = strtok(' ');
-                    $testName = str_replace(':', '', $testName);
+                    $test_name = strtok(' ');
+                    $test_name = str_replace(':', '', $test_name);
 
                     /* Making sure not to grab this line which also contains Failure string */
-                    if ($testName != "Errors") {
+                    if ($test_name != "Errors") {
                         $state = 1;
-                        $result->setName($testName);
+                        $result->setName($test_name);
                     }
 
                     break;
@@ -175,7 +180,7 @@ final class AndroidTestEngine extends ArcanistBaseUnitTestEngine {
                     $result = new ArcanistUnitTestResult();
                     $result->setResult(ArcanistUnitTestResult::RESULT_PASS);
                     $result->setName("All Unit Tests");
-                    array_push($resultArray, $result);
+                    array_push($result_array, $result);
                 }
 
                 /* Parsing Error */
@@ -191,14 +196,14 @@ final class AndroidTestEngine extends ArcanistBaseUnitTestEngine {
 
                 /* Reached the end of trace */
                 if ($line == "") {
-                    $result->setUserData($userData);
-                    array_push($resultArray, $result);
+                    $result->setUserData($user_data);
+                    array_push($result_array, $result);
                     $result = null;
-                    $userData = null;
+                    $user_data = null;
 
                     $state = 0;
                 } else {
-                    $userData .= $line."\n";
+                    $user_data .= $line."\n";
                 }
 
                 break;
@@ -208,6 +213,6 @@ final class AndroidTestEngine extends ArcanistBaseUnitTestEngine {
             }
         }
 
-        return $resultArray;
+        return $result_array;
     }
 }
