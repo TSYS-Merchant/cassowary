@@ -71,6 +71,11 @@ final class ArcanistAndroidLinter extends ArcanistLinter {
         $lint_bin = $this->getLintPath();
         $path_on_disk = $this->getEngine()->getFilePathOnDisk($path);
 
+        putenv('_JAVA_OPTIONS=-Djava.awt.headless=true');
+        if (is_resource(STDERR)) {
+            fclose(STDERR);
+        }
+
         try {
             exec("{$lint_bin} --showall --nolines --fullpath --quiet --xml {$this->arc_lint_location} {$path_on_disk}");
         } catch (CommandException $e) {
