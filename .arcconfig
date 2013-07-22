@@ -4,6 +4,6 @@
   "phutil_libraries" : [
     "/opt/cassowary/libcassowary/src"
   ],
-  "lint.engine" : "MobileLintEngine",
-  "unit.engine" : "MobileUnitTestEngine"
+  "lint.engine" : "PhutilLintEngine",
+  "unit.engine" : "PhutilUnitTestEngine"
 }
