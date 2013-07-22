@@ -57,7 +57,7 @@ final class MobileLintEngine extends ArcanistLintEngine {
             }
         }
 
-        $text_paths = preg_grep('/\.(cs|cshtml|vb|vbhtml|sql|h|m|sh|pch|java|xml)$/', $paths);
+        $text_paths = preg_grep('/\.(cs|cshtml|vb|vbhtml|sql|h|m|sh|pch|java|xml|php|css|js)$/', $paths);
         $linters[] = id(new ArcanistGeneratedLinter())->setPaths($text_paths);
         $linters[] = id(new ArcanistNoLintLinter())->setPaths($text_paths);
         $linters[] = id(new ArcanistSpellingLinter())->setPaths($text_paths);
@@ -169,7 +169,7 @@ final class MobileLintEngine extends ArcanistLintEngine {
                         ArcanistLintSeverity::SEVERITY_ADVICE
                     ))->setMaxLineLength(250);
 
-        $web_paths = preg_grep('/\.(php|css)$/', $paths);
+        $web_paths = preg_grep('/\.(php|css|js)$/', $paths);
         $linters[] = id(new ArcanistTextLinter())->setPaths($web_paths)
                 ->setCustomSeverityMap(
                     array(
@@ -182,6 +182,15 @@ final class MobileLintEngine extends ArcanistLintEngine {
                     ))->setMaxLineLength(120);
 
         $linters[] = id(new ArcanistXHPASTLinter())->setPaths(preg_grep('/\.php$/', $paths));
+
+        $merge_conflict_linter = id(new ArcanistMergeConflictLinter());
+
+        foreach ($paths as $path) {
+            $merge_conflict_linter->addPath($path);
+            $merge_conflict_linter->addData($path, $this->loadData($path));
+        }
+
+        $linters[] = $merge_conflict_linter;
 
         // allow for copyright license to be enforced for projects that opt in
         $check_copyright = $this->getWorkingCopy()->getConfig('check_copyright');
