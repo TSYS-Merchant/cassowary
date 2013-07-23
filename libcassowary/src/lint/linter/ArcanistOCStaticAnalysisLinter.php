@@ -54,11 +54,14 @@ final class ArcanistOCStaticAnalysisLinter extends ArcanistLinter {
     public function lintPath($path) {
         chdir($path);
 
+        $stdout = array();
+        $_ = 0;
         exec(phutil_get_library_root("libcassowary").
               "/../../externals/xctool/xctool.sh -reporter json-stream clean build RUN_CLANG_STATIC_ANALYZER=YES", $stdout, $_);
         foreach ($stdout as $line) {
             $resultItem = json_decode($line, true);
 
+            $matches = array();
             if (isset($resultItem['emittedOutputText']) && $c = preg_match_all("/((?:\\/[\\w\\.\\-]+)+):(\\d+):(\\d+): ((?:[a-z][a-z]+)): (\w+(\s+\w+)*)/is", $resultItem['emittedOutputText'], $matches)) {
                 $message = new ArcanistLintMessage();
                 $message->setPath($matches[1][0]);
@@ -67,11 +70,14 @@ final class ArcanistOCStaticAnalysisLinter extends ArcanistLinter {
                 $message->setCode('CLANG');
 
                 if ($matches[4][0] === "error") {
-                    $message->setSeverity(ArcanistLintSeverity::SEVERITY_ERROR);
+                    $message->setSeverity(
+                        ArcanistLintSeverity::SEVERITY_ERROR);
                 } else if ($matches[4][0] === "warning") {
-                    $message->setSeverity(ArcanistLintSeverity::SEVERITY_WARNING);
+                    $message->setSeverity(
+                        ArcanistLintSeverity::SEVERITY_WARNING);
                 } else {
-                    $message->setSeverity(ArcanistLintSeverity::SEVERITY_ADVICE);
+                    $message->setSeverity(
+                        ArcanistLintSeverity::SEVERITY_ADVICE);
                 }
 
                 $message->setName($matches[5][0]);

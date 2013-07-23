@@ -30,8 +30,9 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 /**
- * Utilize the Android lint utilities that come with the latest ADT. The engine assumes
- * that the ADT binaries are installed on the user's machine and available on the path.
+ * Utilize the Android lint utilities that come with the latest ADT.
+ * The engine assumes that the ADT binaries are installed on the user's
+ * machine and available on the path.
  *
  * @group linter
  */
@@ -83,8 +84,8 @@ final class AndroidLintEngine extends ArcanistLintEngine {
                             continue;
                         }
 
-                        // if an AndroidManifest.xml file can be found we know we're in the
-                        // correct place
+                        // if an AndroidManifest.xml file can be found we know
+                        // we're in the correct place
                         if ($file->getFilename() === 'AndroidManifest.xml') {
                             $analysisPath = $file->getPath();
                         }

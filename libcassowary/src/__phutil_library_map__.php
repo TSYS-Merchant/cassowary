@@ -11,13 +11,14 @@ phutil_register_library_map(array(
   'class' =>
   array(
     'AndroidLintEngine' => 'lint/engine/AndroidLintEngine.php',
-    'AndroidTestEngine' => 'unit/AndroidTestEngine.php',
+    'AndroidTestEngine' => 'unit/AndroidUnitTestEngine.php',
     'ArcanistAndroidLinter' => 'lint/linter/ArcanistAndroidLinter.php',
     'ArcanistCustomLicenseLinter' => 'lint/linter/ArcanistCustomLicenseLinter.php',
     'ArcanistOCFilenameLinter' => 'lint/linter/ArcanistOCFilenameLinter.php',
     'ArcanistOCLinter' => 'lint/linter/ArcanistOCLinter.php',
     'ArcanistOCLinterTestCase' => 'lint/linter/__tests__/ArcanistOCLinterTestCase.php',
     'ArcanistOCStaticAnalysisLinter' => 'lint/linter/ArcanistOCStaticAnalysisLinter.php',
+    'ArcanistReSharperLinter' => 'lint/linter/ArcanistReSharperLinter.php',
     'DotNetLintEngine' => 'lint/engine/DotNetLintEngine.php',
     'MobileLintEngine' => 'lint/engine/MobileLintEngine.php',
     'MobileUnitTestEngine' => 'unit/MobileUnitTestEngine.php',
@@ -37,6 +38,7 @@ phutil_register_library_map(array(
     'ArcanistOCLinter' => 'ArcanistLinter',
     'ArcanistOCLinterTestCase' => 'ArcanistLinterTestCase',
     'ArcanistOCStaticAnalysisLinter' => 'ArcanistLinter',
+    'ArcanistReSharperLinter' => 'ArcanistLinter',
     'DotNetLintEngine' => 'ArcanistLintEngine',
     'MobileLintEngine' => 'ArcanistLintEngine',
     'MobileUnitTestEngine' => 'ArcanistBaseUnitTestEngine',
