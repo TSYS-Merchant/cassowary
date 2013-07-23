@@ -92,7 +92,8 @@ final class MobileLintEngine extends ArcanistLintEngine {
                             continue;
                         }
 
-                        // if an oclint.sh file can be found we know we're in the correct place
+                        // if an oclint.sh file can be found we know
+                        // we're in the correct place
                         if ($file->getFilename() === 'oclint.sh') {
                             $analysisPath = $file->getPath();
                         }
@@ -136,8 +137,8 @@ final class MobileLintEngine extends ArcanistLintEngine {
                             continue;
                         }
 
-                        // if an AndroidManifest.xml file can be found we know we're in the
-                        // correct place
+                        // if an AndroidManifest.xml file can be found
+                        // we know we're in the correct place
                         if ($file->getFilename() === 'AndroidManifest.xml') {
                             $analysisPath = $file->getPath();
                         }
@@ -200,7 +201,8 @@ final class MobileLintEngine extends ArcanistLintEngine {
                             continue;
                         }
 
-                        // if a .sln file can be found we know we're in the correct place
+                        // if a .sln file can be found we know
+                        // we're in the correct place
                         if ($file->getExtension() == 'sln') {
                             $analysis_path = $file->getPathname();
                         }

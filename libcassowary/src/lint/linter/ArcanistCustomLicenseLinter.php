@@ -121,12 +121,14 @@ EOLICENSE;
 
         foreach ($patterns as $pattern) {
             if (preg_match($pattern, $data, $matches)) {
-                $expect = rtrim(implode('', array_slice($matches, 1)))."\r\n".$license;
+                $expect = rtrim(implode('', array_slice($matches, 1)))
+                    ."\r\n".$license;
                 if (trim($matches[0]) != trim($expect)) {
                     $this->raiseLintAtOffset(
                         0,
                         self::LINT_NO_LICENSE_HEADER,
-                        'This file has a missing or out of date license header.',
+                        'This file has a missing or out of date "
+                            ."license header.',
                         $matches[0],
                         ltrim($expect));
                 }

@@ -60,8 +60,8 @@ final class ArcanistOCFilenameLinter extends ArcanistLinter {
         if (!preg_match('@^[a-z0-9~./\\\\_\@\+-]+$@i', $path)) {
             $this->raiseLintAtPath(
                 self::LINT_BAD_FILENAME,
-                'Name files using only letters, numbers, period, hyphen, plus sign, '.
-                'apetail, tilde, and underscore.');
+                "Name files using only letters, numbers, period, hyphen, "
+                ."plus sign, apetail, tilde, and underscore.");
         }
     }
 }

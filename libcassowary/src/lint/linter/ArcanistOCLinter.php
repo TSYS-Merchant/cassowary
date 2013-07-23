@@ -55,7 +55,9 @@ final class ArcanistOCLinter extends ArcanistLinter {
     public function lintPath($path) {
         list($err) = exec_manual('which oclint');
         if ($err) {
-            throw new ArcanistUsageException("OCLint does not appear to be available on the path. Make sure that the OCLint is installed.");
+            throw new ArcanistUsageException("OCLint does not appear to be "
+                ."available on the path. Make sure that the OCLint is "
+                ."installed.");
         }
 
         $path_on_disk = $this->getEngine()->getFilePathOnDisk($path);
@@ -85,13 +87,17 @@ final class ArcanistOCLinter extends ArcanistLinter {
         }
 
         try {
+            $stdout = array();
+            $_ = 0;
             exec("sh $ocLintPath $path_on_disk", $stdout, $_);
             } catch (CommandException $e) {
             $stdout = $e->getStdout();
         }
 
         foreach ($stdout as $line) {
-            if ($c = preg_match_all("/((?:\\/[\\w\\.\\-]+)+):(\\d+):(\\d+): (.*?) P(\\d+)((?:[a-zA-Z0-9 ]+))/is", $line, $matches)) {
+            $matches = array();
+            if ($c = preg_match_all("/((?:\\/[\\w\\.\\-]+)+):(\\d+):(\\d+): (.*?) P(\\d+)((?:[a-zA-Z0-9 ]+))/is",
+                $line, $matches)) {
                 $message = new ArcanistLintMessage();
                 $message->setPath($path);
                 $message->setLine($matches[2][0]);
@@ -99,9 +105,11 @@ final class ArcanistOCLinter extends ArcanistLinter {
                 $message->setCode($matches[4][0]);
 
                 if ($matches[5][0] === 1) {
-                    $message->setSeverity(ArcanistLintSeverity::SEVERITY_ERROR);
+                    $message->setSeverity(
+                        ArcanistLintSeverity::SEVERITY_ERROR);
                 } else {
-                    $message->setSeverity(ArcanistLintSeverity::SEVERITY_WARNING);
+                    $message->setSeverity(
+                        ArcanistLintSeverity::SEVERITY_WARNING);
                 }
 
                 $message->setName($matches[4][0]);

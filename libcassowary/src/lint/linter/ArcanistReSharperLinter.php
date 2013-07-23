@@ -30,11 +30,9 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 /**
- * Uses JetBrains' ReSharper Command Line Tools to detect various errors in .NET code.
- * To use this linter, you must install the above tools and have inspectcode.exe
- * on your PATH.
- *
- * Download location: http://www.jetbrains.com/resharper/features/command-line.html
+ * Uses JetBrains' ReSharper Command Line Tools to detect various errors in
+ * .NET code. To use this linter, you must install the above tools and have
+ * inspectcode.exe on your PATH.
  *
  * @group linter
  */
@@ -69,40 +67,48 @@ final class ArcanistReSharperLinter extends ArcanistLinter {
         $filexml = simplexml_load_file($lint_output);
 
         if ($filexml->attributes()->ToolsVersion < 8.0) {
-            throw new ArcanistUsageException("Unsupported Command Line Tools output version. "
-            . "Please update to the latest version.");
+            throw new ArcanistUsageException("Unsupported Command Line Tools "
+            ."output version. Please update to the latest version.");
         } else if ($filexml->attributes()->ToolsVersion > 8.0) {
-            throw new ArcanistUsageException("Unsupported Command Line Tools output version. "
-            . "Cassowary needs an update to match.");
+            throw new ArcanistUsageException("Unsupported Command Line Tools "
+            ."output version. Cassowary needs an update to match.");
         }
 
         $severity_map = array();
         $name_map = array();
         foreach ($filexml->xpath('//IssueType') as $issue_type) {
             if ($issue_type->attributes()->Severity == 'ERROR') {
-                $severity_map[(string)$issue_type->attributes()->Id] = ArcanistLintSeverity::SEVERITY_ERROR;
+                $severity_map[(string)$issue_type->attributes()->Id] =
+                    ArcanistLintSeverity::SEVERITY_ERROR;
             } else if ($issue_type->attributes()->Severity == 'WARNING') {
-                $severity_map[(string)$issue_type->attributes()->Id] = ArcanistLintSeverity::SEVERITY_WARNING;
+                $severity_map[(string)$issue_type->attributes()->Id] =
+                    ArcanistLintSeverity::SEVERITY_WARNING;
             } else {
-                $severity_map[(string)$issue_type->attributes()->Id] = ArcanistLintSeverity::SEVERITY_ADVICE;
+                $severity_map[(string)$issue_type->attributes()->Id] =
+                    ArcanistLintSeverity::SEVERITY_ADVICE;
             }
 
-            $name_map[(string)$issue_type->attributes()->Id] = $issue_type->attributes()->Description;
+            $name_map[(string)$issue_type->attributes()->Id] =
+                $issue_type->attributes()->Description;
         }
 
         foreach ($filexml->xpath('//Issue') as $issue) {
             $message = new ArcanistLintMessage();
-            $message->setPath(Filesystem::resolvePath((string)$issue->attributes()->File, dirname($path_on_disk)));
+            $message->setPath(
+                Filesystem::resolvePath((string)$issue->attributes()->File,
+                    dirname($path_on_disk)));
 
             $message_line = intval($issue->attributes()->Line);
             if ($message_line > 0) {
                 $message->setLine($message_line);
             }
 
-            $message->setName((string)$name_map[(string)$issue->attributes()->TypeId]);
+            $message->setName(
+                (string)$name_map[(string)$issue->attributes()->TypeId]);
             $message->setCode((string)$issue->attributes()->TypeId);
             $message->setDescription((string)$issue->attributes()->Message);
-            $message->setSeverity($severity_map[(string)$issue->attributes()->TypeId]);
+            $message->setSeverity(
+                $severity_map[(string)$issue->attributes()->TypeId]);
 
             // Skip line number check, since we're linting the whole project
             $message->setBypassChangedLineFiltering(true);

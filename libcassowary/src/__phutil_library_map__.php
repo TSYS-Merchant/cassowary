@@ -11,7 +11,7 @@ phutil_register_library_map(array(
   'class' =>
   array(
     'AndroidLintEngine' => 'lint/engine/AndroidLintEngine.php',
-    'AndroidTestEngine' => 'unit/AndroidTestEngine.php',
+    'AndroidTestEngine' => 'unit/AndroidUnitTestEngine.php',
     'ArcanistAndroidLinter' => 'lint/linter/ArcanistAndroidLinter.php',
     'ArcanistCustomLicenseLinter' => 'lint/linter/ArcanistCustomLicenseLinter.php',
     'ArcanistOCFilenameLinter' => 'lint/linter/ArcanistOCFilenameLinter.php',

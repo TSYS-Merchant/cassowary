@@ -30,14 +30,15 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 /**
-* Utilize the OCLint lint utilities available at http://oclint.org/, at the time of
-* this writing v0.6. Also use a few other core linters for cleanliness. The engine assumes
-* that OCLint is installed on the user's machine and available on the path.
+* Utilize the OCLint lint utilities. The engine assumes
+* that OCLint is installed on the user's machine and available
+* on the path.
 *
 * @group linter
 */
 final class OCLintEngine extends ArcanistLintEngine {
     public function buildLinters() {
+        $linters = array();
         $paths = $this->getPaths();
 
         $linters[] = id(new ArcanistOCFilenameLinter())->setPaths($paths);
@@ -86,7 +87,8 @@ final class OCLintEngine extends ArcanistLintEngine {
                             continue;
                         }
 
-                        // if an oclint.sh file can be found we know we're in the correct place
+                        // if an oclint.sh file can be found we know
+                        // we're in the correct place
                         if ($file->getFilename() === 'oclint.sh') {
                             $analysisPath = $file->getPath();
                         }

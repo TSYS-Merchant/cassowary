@@ -36,6 +36,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 final class DotNetLintEngine extends ArcanistLintEngine {
     public function buildLinters() {
+        $linters = array();
         $paths = $this->getPaths();
 
         $linters[] = id(new ArcanistFilenameLinter())->setPaths($paths);
@@ -85,7 +86,8 @@ final class DotNetLintEngine extends ArcanistLintEngine {
                             continue;
                         }
 
-                        // if a .sln file can be found we know we're in the correct place
+                        // if a .sln file can be found we know
+                        // we're in the correct place
                         if ($file->getExtension() == 'sln') {
                             $analysis_path = $file->getPathname();
                         }
