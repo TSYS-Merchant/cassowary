@@ -181,6 +181,42 @@ final class MobileLintEngine extends ArcanistLintEngine {
                         ArcanistLintSeverity::SEVERITY_ADVICE
                     ))->setMaxLineLength(120);
 
+        // locate solution file (.sln) and run ReSharper solution-wide analysis
+        if (count($dotnet_paths) > 0) {
+            $analysis_paths = array();
+
+            foreach ($dotnet_paths as $key => $path) {
+                $path_on_disk = $this->getFilePathOnDisk($path);
+                $current_directory = dirname($path_on_disk);
+                $analysis_path = null;
+
+                do {
+                    if ($current_directory === 'C:\\') {
+                        break;
+                    }
+
+                    foreach (new DirectoryIterator($current_directory) as $file) {
+                        if (!$file->isFile()) {
+                            continue;
+                        }
+
+                        // if a .sln file can be found we know we're in the correct place
+                        if ($file->getExtension() == 'sln') {
+                            $analysis_path = $file->getPathname();
+                        }
+                    }
+
+                    $current_directory = dirname($current_directory);
+                } while (empty($analysis_path));
+
+                if ($analysis_path != null && !in_array($analysis_path, $analysis_paths)) {
+                    $analysis_paths[] = $analysis_path;
+                }
+            }
+
+            $linters[] = id(new ArcanistReSharperLinter())->setPaths($analysis_paths);
+        }
+
         $linters[] = id(new ArcanistXHPASTLinter())->setPaths(preg_grep('/\.php$/', $paths));
 
         $merge_conflict_linter = id(new ArcanistMergeConflictLinter());
