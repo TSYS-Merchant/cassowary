@@ -1,0 +1,41 @@
+@interface MyClass : NSObject
+{
+}
+
+- (void)reallyAmazinglyAstoundinglyLongMethodWithParameter:(id)objectA anotherParameter:(id)objectB anotherParameter:(id)objectC anotherParameter:(id)objectD yetAnotherParameter:(id)objectE;
+- (void)crazyLongMethodNameThatJustBarelyFitsWithinTheLineLimitWithParameter:(id)anObject;
+- (void)anotherAmazinglyLengthyMethodNameWhichSomehowExceedsTheLineLimitByJustOneCharacter;
+// This is a very short method name, documented with a very long comment that should probably be broken into several lines.
+- (void)shortAndSimple;
+
+@end
+
+@implementation MyClass
+
+- (void)reallyAmazinglyAstoundinglyLongMethodWithParameter:(id)objectA anotherParameter:(id)objectB anotherParameter:(id)objectC anotherParameter:(id)objectD yetAnotherParameter:(id)objectE
+{
+}
+
+- (void)anotherAmazinglyLengthyMethodNameWhichSomehowExceedsTheLineLimitByJustOneCharacter
+{
+}
+
+- (void)crazyLongMethodNameThatJustBarelyFitsWithinTheLineLimitWithParameter:(id)anObject
+{
+}
+
+- (void)shortAndSimple
+{
+}
+
+@end
+~~~~~~~~~~
+advice:5:1
+advice:7:1
+advice:8:1
+advice:15:1
+~~~~~~~~~~
+~~~~~~~~~~
+{
+  "hook" : true
+}
