@@ -7,10 +7,13 @@ final class ArcanistOCLinterTestCase extends ArcanistLinterTestCase {
  	 */
 	public function testOCLint() {
 		$linter = new ArcanistOCLinter();
-		$working_copy = new ArcanistWorkingCopyIdentity::newFromPath(__FILE__);
-		return this->executeTestsInDirectory(
-			dirname(__FILE__) . `/objc/`,
+	    $working_copy = ArcanistWorkingCopyIdentity::newFromPath(__FILE__);
+		return $this->executeTestsInDirectory(
+			dirname(__FILE__) . '/objc/tests/',
 			$linter,
 			$working_copy);
+	}
+
+	public function testSomething() {
 	}
 }
