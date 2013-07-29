@@ -53,7 +53,8 @@ final class DotNetLintEngine extends ArcanistLintEngine {
         }
 
         $text_paths = preg_grep('/\.(cs|cshtml|vb|vbhtml|sql)$/', $paths);
-        $linters[] = id(new ArcanistGeneratedLinter())->setPaths($text_paths);
+        $linters[] = id(new ArcanistMobileGeneratedLinter())
+                     ->setPaths($text_paths);
         $linters[] = id(new ArcanistNoLintLinter())->setPaths($text_paths);
         $linters[] = id(new ArcanistTextLinter())->setPaths($text_paths)
                      ->setCustomSeverityMap(

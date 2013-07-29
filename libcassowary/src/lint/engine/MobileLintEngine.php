@@ -58,7 +58,8 @@ final class MobileLintEngine extends ArcanistLintEngine {
         }
 
         $text_paths = preg_grep('/\.(cs|cshtml|vb|vbhtml|sql|h|m|sh|pch|java|xml|php|css|js)$/', $paths);
-        $linters[] = id(new ArcanistGeneratedLinter())->setPaths($text_paths);
+        $linters[] = id(new ArcanistMobileGeneratedLinter())
+                ->setPaths($text_paths);
         $linters[] = id(new ArcanistNoLintLinter())->setPaths($text_paths);
         $linters[] = id(new ArcanistSpellingLinter())->setPaths($text_paths);
 

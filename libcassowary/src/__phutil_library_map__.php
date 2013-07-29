@@ -11,9 +11,10 @@ phutil_register_library_map(array(
   'class' =>
   array(
     'AndroidLintEngine' => 'lint/engine/AndroidLintEngine.php',
-    'AndroidTestEngine' => 'unit/AndroidUnitTestEngine.php',
+    'AndroidUnitTestEngine' => 'unit/AndroidUnitTestEngine.php',
     'ArcanistAndroidLinter' => 'lint/linter/ArcanistAndroidLinter.php',
     'ArcanistCustomLicenseLinter' => 'lint/linter/ArcanistCustomLicenseLinter.php',
+    'ArcanistMobileGeneratedLinter' => 'lint/linter/ArcanistMobileGeneratedLinter.php',
     'ArcanistOCFilenameLinter' => 'lint/linter/ArcanistOCFilenameLinter.php',
     'ArcanistOCLinter' => 'lint/linter/ArcanistOCLinter.php',
     'ArcanistOCLinterTestCase' => 'lint/linter/__tests__/ArcanistOCLinterTestCase.php',
@@ -31,9 +32,10 @@ phutil_register_library_map(array(
   'xmap' =>
   array(
     'AndroidLintEngine' => 'ArcanistLintEngine',
-    'AndroidTestEngine' => 'ArcanistBaseUnitTestEngine',
+    'AndroidUnitTestEngine' => 'ArcanistBaseUnitTestEngine',
     'ArcanistAndroidLinter' => 'ArcanistLinter',
     'ArcanistCustomLicenseLinter' => 'ArcanistLinter',
+    'ArcanistMobileGeneratedLinter' => 'ArcanistLinter',
     'ArcanistOCFilenameLinter' => 'ArcanistLinter',
     'ArcanistOCLinter' => 'ArcanistLinter',
     'ArcanistOCLinterTestCase' => 'ArcanistLinterTestCase',
