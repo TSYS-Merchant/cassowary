@@ -40,14 +40,14 @@ final class ArcanistAndroidLinter extends ArcanistLinter {
     private function getLintPath() {
         $lint_bin = "lint";
 
-        list($err) = exec_manual('which %s', $lint_bin);
+        list($err, $stdout) = exec_manual('which %s', $lint_bin);
         if ($err) {
             throw new ArcanistUsageException("Lint does not appear to be "
-                ."available on the path. Make sure that the Android tools "
-                ."directory is part of your path.");
+            . "available on the path. Make sure that the Android tools "
+            . "directory is part of your path.");
         }
 
-        return $lint_bin;
+        return trim($stdout);
     }
 
     public function willLintPaths(array $paths) {
@@ -71,26 +71,38 @@ final class ArcanistAndroidLinter extends ArcanistLinter {
         $path_on_disk = $this->getEngine()->getFilePathOnDisk($path);
         $arc_lint_location = tempnam(sys_get_temp_dir(), 'arclint.xml');
 
+        $extra_rule_project_path = phutil_get_library_root('libcassowary') .
+                '/../support/lint/android';
+        $extra_rule_jar_file = dirname(__FILE__) .
+                '/rules/CassowaryAndroidLintCustomRules.jar';
+        $lint_lib_path = dirname($lint_bin) . '/lib';
+
         putenv('_JAVA_OPTIONS=-Djava.awt.headless=true');
-        if (is_resource(STDERR)) {
-            fclose(STDERR);
+
+        chdir($extra_rule_project_path);
+        list($err) = exec_manual('ant jar -lib %s', $lint_lib_path);
+        if ($err) {
+            throw new ArcanistUsageException("Error compiling lint rules");
         }
 
-        try {
-            exec("{$lint_bin} --showall --nolines --fullpath --quiet --xml {$arc_lint_location} {$path_on_disk}");
-        } catch (CommandException $e) {
-            return;
+        putenv('ANDROID_LINT_JARS=' . $extra_rule_jar_file);
+
+        list($err) = exec_manual(
+            '%s --showall --nolines --fullpath --quiet --xml %s %s',
+            $lint_bin, $arc_lint_location, $path_on_disk);
+        if ($err != 0 && $err != 1) {
+            throw new ArcanistUsageException("Error executing lint command");
         }
 
         $filexml = simplexml_load_file($arc_lint_location);
 
         if ($filexml->attributes()->format < 4) {
             throw new ArcanistUsageException("Unsupported Android lint output "
-                ."version. Please update your Android SDK to the latest "
-                ."version.");
+            . "version. Please update your Android SDK to the latest "
+            . "version.");
         } else if ($filexml->attributes()->format > 4) {
             throw new ArcanistUsageException("Unsupported Android lint output "
-                ."version. Cassowary needs an update to match.");
+            . "version. Cassowary needs an update to match.");
         }
 
         foreach ($filexml as $issue) {
@@ -113,8 +125,9 @@ final class ArcanistAndroidLinter extends ArcanistLinter {
                 $issue_attrs->message));
 
             // Setting Severity
-            if ($issue_attrs->severity == 'Error' ||
-                $issue_attrs->severity == 'Fatal') {
+            if ($issue_attrs->severity == 'Error'
+                    || $issue_attrs->severity == 'Fatal'
+            ) {
                 $message->setSeverity(
                     ArcanistLintSeverity::SEVERITY_ERROR);
             } else if ($issue_attrs->severity == 'Warning') {

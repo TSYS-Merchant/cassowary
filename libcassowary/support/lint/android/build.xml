@@ -1,0 +1,31 @@
+<project>
+
+    <property file="build.properties" />
+
+    <target name="clean">
+        <delete dir="${bin.dir}" />
+    </target>
+
+    <target name="checkforchanges">
+        <uptodate property="unchanged" targetfile="${jar.dir}/${app.name}.jar">
+            <srcfiles dir="${src.dir}" includes="**" />
+        </uptodate>
+    </target>
+
+    <target name="compile" depends="checkforchanges" unless="unchanged">
+        <mkdir dir="${classes.dir}" />
+        <javac srcdir="${src.dir}" destdir="${classes.dir}"
+            includeantruntime="true" />
+    </target>
+
+    <target name="jar" depends="checkforchanges,compile" unless="unchanged">
+        <mkdir dir="${jar.dir}" />
+        <jar destfile="${jar.dir}/${app.name}.jar" basedir="${classes.dir}">
+            <manifest>
+                <attribute name="Manifest-Version" value="${manifest.version}" />
+                <attribute name="Lint-Registry" value="${registry.class}" />
+            </manifest>
+        </jar>
+    </target>
+
+</project>

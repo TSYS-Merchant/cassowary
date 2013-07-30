@@ -1,0 +1,3 @@
+The jar file in this directory comes pre-built using Ant. If the source files in
+libcassowary/support/lint/android/src are changed or the jar is deleted, it will
+be recreated with Ant when arc lint is run on an Android project.
