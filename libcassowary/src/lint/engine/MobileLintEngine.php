@@ -76,19 +76,19 @@ final class MobileLintEngine extends ArcanistLintEngine {
 
         // locate project directories and run static analysis
         if (count($ios_implementation_paths) > 0) {
-            $analysisPaths = array();
+            $analysis_paths = array();
 
             foreach ($ios_implementation_paths as $key => $path) {
                 $path_on_disk = $this->getFilePathOnDisk($path);
-                $currentDirectory = dirname($path_on_disk);
-                $analysisPath = null;
+                $current_directory = dirname($path_on_disk);
+                $analysis_path = null;
 
                 do {
-                    if ($currentDirectory === '/') {
+                    if ($current_directory === '/' || $current_directory === 'C:\\') {
                         break;
                     }
 
-                    foreach (new DirectoryIterator($currentDirectory) as $file) {
+                    foreach (new DirectoryIterator($current_directory) as $file) {
                         if (!$file->isFile()) {
                             continue;
                         }
@@ -96,19 +96,19 @@ final class MobileLintEngine extends ArcanistLintEngine {
                         // if an oclint.sh file can be found we know
                         // we're in the correct place
                         if ($file->getFilename() === 'oclint.sh') {
-                            $analysisPath = $file->getPath();
+                            $analysis_path = $file->getPath();
                         }
                     }
 
-                    $currentDirectory = dirname($currentDirectory);
-                } while (empty($analysisPath));
+                    $current_directory = dirname($current_directory);
+                } while (empty($analysis_path));
 
-                if ($analysisPath != null && !in_array($analysisPath, $analysisPaths)) {
-                    $analysisPaths[] = $analysisPath;
+                if ($analysis_path != null && !in_array($analysis_path, $analysis_paths)) {
+                    $analysis_paths[] = $analysis_path;
                 }
             }
 
-            $linters[] = id(new ArcanistOCStaticAnalysisLinter())->setPaths($analysisPaths);
+            $linters[] = id(new ArcanistOCStaticAnalysisLinter())->setPaths($analysis_paths);
         }
 
         $android_paths = preg_grep('/\.(java|xml)$/', $paths);
@@ -121,19 +121,19 @@ final class MobileLintEngine extends ArcanistLintEngine {
 
         // locate project directories and run static analysis
         if (count($android_paths) > 0) {
-            $analysisPaths = array();
+            $analysis_paths = array();
 
             foreach ($android_paths as $key => $path) {
                 $path_on_disk = $this->getFilePathOnDisk($path);
-                $currentDirectory = dirname($path_on_disk);
-                $analysisPath = null;
+                $current_directory = dirname($path_on_disk);
+                $analysis_path = null;
 
                 do {
-                    if ($currentDirectory === '/') {
+                    if ($current_directory === '/' || $current_directory === 'C:\\') {
                         break;
                     }
 
-                    foreach (new DirectoryIterator($currentDirectory) as $file) {
+                    foreach (new DirectoryIterator($current_directory) as $file) {
                         if (!$file->isFile()) {
                             continue;
                         }
@@ -141,22 +141,22 @@ final class MobileLintEngine extends ArcanistLintEngine {
                         // if an AndroidManifest.xml file can be found
                         // we know we're in the correct place
                         if ($file->getFilename() === 'AndroidManifest.xml') {
-                            $analysisPath = $file->getPath();
+                            $analysis_path = $file->getPath();
                         }
                     }
 
-                    $currentDirectory = dirname($currentDirectory);
-                } while (empty($analysisPath));
+                    $current_directory = dirname($current_directory);
+                } while (empty($analysis_path));
 
-                if ($analysisPath != null
-                        && !in_array($analysisPath, $analysisPaths)
-                        && preg_match('/tests$/', $analysisPath) == 0
+                if ($analysis_path != null
+                        && !in_array($analysis_path, $analysis_paths)
+                        && preg_match('/tests$/', $analysis_path) == 0
                 ) {
-                    $analysisPaths[] = $analysisPath;
+                    $analysis_paths[] = $analysis_path;
                 }
             }
 
-            $linters[] = id(new ArcanistAndroidLinter())->setPaths($analysisPaths);
+            $linters[] = id(new ArcanistAndroidLinter())->setPaths($analysis_paths);
         }
 
         $dotnet_paths = preg_grep('/\.(cs|cshtml|vb|vbhtml|sql)$/', $paths);
@@ -193,7 +193,7 @@ final class MobileLintEngine extends ArcanistLintEngine {
                 $analysis_path = null;
 
                 do {
-                    if ($current_directory === 'C:\\') {
+                    if ($current_directory === '/' || $current_directory === 'C:\\') {
                         break;
                     }
 
