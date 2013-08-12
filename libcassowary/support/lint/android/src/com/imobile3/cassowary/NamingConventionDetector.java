@@ -125,8 +125,10 @@ public class NamingConventionDetector extends Detector implements
                                             "\"s\".",
                                     name);
                         }
-                    } else if (modifiers.isProtected()
-                            || modifiers.isPrivate()) { // mMember
+                    } else if ((modifiers.isProtected()
+                            || modifiers.isPrivate())
+                            && (cd == null || cd.astModifiers().isPublic())) {
+                        // mMember
                         if (!name.matches("^m[A-Z].*")) {
                             mContext.report(ISSUE_VARIABLE_NAMING_CONVENTION,
                                     node,
@@ -143,6 +145,13 @@ public class NamingConventionDetector extends Detector implements
                                     "Variable names should begin with a " +
                                             "lower-case letter.",
                                     name);
+                        } else if (name.matches("^[ms][A-Z].*")) {
+                            mContext.report(ISSUE_VARIABLE_NAMING_CONVENTION,
+                                    node,
+                                    mContext.getLocation(node),
+                                    "Non-member variables should be prefixed "
+                                            + "with \"m\" or \"s\".",
+                                    name);
                         }
                     }
                 }
@@ -153,15 +162,14 @@ public class NamingConventionDetector extends Detector implements
     }
 
     private ClassDeclaration getClassDeclaration(Node node) {
-        ClassDeclaration cd = null;
         while (node != null) {
             Class<? extends Node> type = node.getClass();
             if (type == ClassDeclaration.class) {
-                cd = (ClassDeclaration)node;
+                return (ClassDeclaration)node;
             }
             node = node.getParent();
         }
 
-        return cd;
+        return null;
     }
 }

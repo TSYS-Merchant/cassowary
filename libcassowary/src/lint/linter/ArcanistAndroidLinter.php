@@ -145,5 +145,6 @@ final class ArcanistAndroidLinter extends ArcanistLinter {
         }
 
         unlink($arc_lint_location);
+        putenv('_JAVA_OPTIONS');
     }
 }
