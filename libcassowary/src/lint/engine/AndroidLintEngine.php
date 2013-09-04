@@ -55,7 +55,8 @@ final class AndroidLintEngine extends ArcanistLintEngine {
         }
 
         $android_paths = preg_grep('/\.(java|xml)$/', $paths);
-        $linters[] = id(new ArcanistGeneratedLinter())->setPaths($android_paths);
+        $linters[] =
+                id(new ArcanistGeneratedLinter())->setPaths($android_paths);
         $linters[] = id(new ArcanistNoLintLinter())->setPaths($android_paths);
         $linters[] = id(new ArcanistTextLinter())->setPaths($android_paths)
                 ->setCustomSeverityMap(
@@ -102,14 +103,17 @@ final class AndroidLintEngine extends ArcanistLintEngine {
                 }
             }
 
-            $linters[] = id(new ArcanistAndroidLinter())->setPaths($analysisPaths);
+            $linters[] =
+                    id(new ArcanistAndroidLinter())->setPaths($analysisPaths);
         }
 
         // allow for copyright license to be enforced for projects that opt in
-        $check_copyright = $this->getWorkingCopy()->getConfig('check_copyright');
+        $check_copyright =
+                $this->getWorkingCopy()->getConfig('check_copyright');
         if ($check_copyright) {
             $java_paths = preg_grep('/\.java$/', $paths);
-            $linters[] = id(new ArcanistCustomLicenseLinter())->setPaths($java_paths);
+            $linters[] =
+                    id(new ArcanistCustomLicenseLinter())->setPaths($java_paths);
         }
 
         return $linters;

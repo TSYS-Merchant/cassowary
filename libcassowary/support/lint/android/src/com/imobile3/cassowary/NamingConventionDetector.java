@@ -11,7 +11,9 @@ import lombok.ast.ForwardingAstVisitor;
 import lombok.ast.MethodInvocation;
 import lombok.ast.Modifiers;
 import lombok.ast.Node;
+import lombok.ast.StrictListAccessor;
 import lombok.ast.VariableDeclaration;
+import lombok.ast.VariableDefinitionEntry;
 
 import com.android.annotations.Nullable;
 import com.android.tools.lint.detector.api.Category;
@@ -90,67 +92,98 @@ public class NamingConventionDetector extends Detector implements
         @Override
         public boolean visitVariableDeclaration(VariableDeclaration node) {
             ClassDeclaration cd = getClassDeclaration(node);
-            String name = node.getVariableDefinitionEntries()
-                    .first().astName().astValue();
 
-            if ((cd == null || !cd.astName().toString().equals("R"))
-                    && !name.equals("serialVersionUID")) {
-                Modifiers modifiers = node.astDefinition().astModifiers();
+            ClassDeclaration parent = cd;
+            while (parent != null) {
+                if (parent.astName().toString().equals("R")) {
+                    return false;
+                }
+                parent = getClassDeclaration(parent.getParent());
+            }
 
-                if (modifiers.isStatic() && modifiers.isFinal()) { // CONSTANT
+            Modifiers modifiers = node.astDefinition().astModifiers();
+
+            StrictListAccessor<VariableDefinitionEntry, VariableDeclaration> varDefinitions =
+                    node.getVariableDefinitionEntries();
+            for (VariableDefinitionEntry varDefinition : varDefinitions) {
+                String name = varDefinition.astName().astValue();
+
+                if (name.equals("serialVersionUID")) {
+                    continue;
+                }
+
+                if (modifiers.isStatic() && modifiers.isFinal()) {
+                    // CONSTANT
                     if (name.matches(".*[a-z].*")) {
-                        mContext.report(ISSUE_VARIABLE_NAMING_CONVENTION,
+                        mContext.report(
+                                ISSUE_VARIABLE_NAMING_CONVENTION,
                                 node,
                                 mContext.getLocation(node),
-                                "Constants should be named in all uppercase " +
-                                        "with underscores.",
+                                "Constants should be named in all " +
+                                        "uppercase with underscores.",
                                 name);
                     }
                 } else {
                     if (name.contains("_")) {
-                        mContext.report(ISSUE_VARIABLE_NAMING_CONVENTION,
+                        mContext.report(
+                                ISSUE_VARIABLE_NAMING_CONVENTION,
                                 node,
                                 mContext.getLocation(node),
-                                "Underscores are not allowed in non-constant " +
-                                        "variable names. Use camelCase.",
+                                "Underscores are not allowed in non-" +
+                                        "constant variable names. " +
+                                        "Use camelCase.",
                                 name);
-                    }
-
-                    if (modifiers.isStatic()) { // sStatic
+                    } else if (modifiers.isStatic()) { // sStatic
                         if (!name.matches("^s[A-Z].*")) {
-                            mContext.report(ISSUE_VARIABLE_NAMING_CONVENTION,
+                            mContext.report(
+                                    ISSUE_VARIABLE_NAMING_CONVENTION,
                                     node,
                                     mContext.getLocation(node),
-                                    "Static variable names should begin with " +
-                                            "\"s\".",
+                                    "Static variable names should " +
+                                            "begin with \"s\".",
                                     name);
                         }
-                    } else if ((modifiers.isProtected()
-                            || modifiers.isPrivate())
-                            && (cd == null || cd.astModifiers().isPublic())) {
-                        // mMember
-                        if (!name.matches("^m[A-Z].*")) {
-                            mContext.report(ISSUE_VARIABLE_NAMING_CONVENTION,
-                                    node,
-                                    mContext.getLocation(node),
-                                    "Member variable names should begin with " +
-                                            "\"m\".",
-                                    name);
+                    } else if (modifiers.isProtected()
+                            || modifiers.isPrivate()) {
+                        if (cd == null || cd.astModifiers().isPublic()) {
+                            // mMember
+                            if (!name.matches("^m[A-Z].*")) {
+                                mContext.report(
+                                        ISSUE_VARIABLE_NAMING_CONVENTION,
+                                        node,
+                                        mContext.getLocation(node),
+                                        "Member variable names should " +
+                                                "begin with \"m\".",
+                                        name);
+                            }
+                        } else { // pPrivateClassMember
+                            if (!name.matches("^p[A-Z].*")) {
+                                mContext.report(
+                                        ISSUE_VARIABLE_NAMING_CONVENTION,
+                                        node,
+                                        mContext.getLocation(node),
+                                        "Member variable names in private " +
+                                                "classes should begin with " +
+                                                "\"p\".",
+                                        name);
+                            }
                         }
                     } else { // camelCase
                         if (name.matches("^[A-Z].*")) {
-                            mContext.report(ISSUE_VARIABLE_NAMING_CONVENTION,
+                            mContext.report(
+                                    ISSUE_VARIABLE_NAMING_CONVENTION,
                                     node,
                                     mContext.getLocation(node),
-                                    "Variable names should begin with a " +
-                                            "lower-case letter.",
+                                    "Variable names should begin " +
+                                            "with a lower-case letter.",
                                     name);
-                        } else if (name.matches("^[ms][A-Z].*")) {
-                            mContext.report(ISSUE_VARIABLE_NAMING_CONVENTION,
+                        } else if (name.matches("^[msp][A-Z].*")) {
+                            mContext.report(
+                                    ISSUE_VARIABLE_NAMING_CONVENTION,
                                     node,
                                     mContext.getLocation(node),
-                                    "Non-member variables should be prefixed "
-                                            + "with \"m\" or \"s\".",
+                                    "Non-member variables should not be " +
+                                            "prefixed.",
                                     name);
                         }
                     }

@@ -43,7 +43,8 @@ final class MobileLintEngine extends ArcanistLintEngine {
         $ios_paths = preg_grep('/\.(h|m|sh|pch|png|xib|jpg)$/', $paths);
         $linters[] = id(new ArcanistOCFilenameLinter())->setPaths($ios_paths);
 
-        $non_ios_paths = preg_grep('/\.(h|m|sh|pch|png|xib|jpg)$/', $paths, PREG_GREP_INVERT);
+        $non_ios_paths = preg_grep('/\.(h|m|sh|pch|png|xib|jpg)$/', $paths,
+            PREG_GREP_INVERT);
         $linters[] = id(new ArcanistFilenameLinter())->setPaths($non_ios_paths);
 
         // skip directories and lint only regular files in remaining linters
@@ -57,7 +58,9 @@ final class MobileLintEngine extends ArcanistLintEngine {
             }
         }
 
-        $text_paths = preg_grep('/\.(cs|cshtml|vb|vbhtml|sql|h|m|sh|pch|java|xml|php|css|js)$/', $paths);
+        $text_paths =
+                preg_grep('/\.(cs|cshtml|vb|vbhtml|sql|h|m|sh|pch|java|xml|php|css|js)$/',
+                    $paths);
         $linters[] = id(new ArcanistMobileGeneratedLinter())
                 ->setPaths($text_paths);
         $linters[] = id(new ArcanistNoLintLinter())->setPaths($text_paths);
@@ -72,7 +75,8 @@ final class MobileLintEngine extends ArcanistLintEngine {
                     ))->setMaxLineLength(120);
 
         $ios_implementation_paths = preg_grep('/\.m$/', $paths);
-        $linters[] = id(new ArcanistOCLinter())->setPaths($ios_implementation_paths);
+        $linters[] =
+                id(new ArcanistOCLinter())->setPaths($ios_implementation_paths);
 
         // locate project directories and run static analysis
         if (count($ios_implementation_paths) > 0) {
@@ -84,7 +88,9 @@ final class MobileLintEngine extends ArcanistLintEngine {
                 $analysis_path = null;
 
                 do {
-                    if ($current_directory === '/' || $current_directory === 'C:\\') {
+                    if ($current_directory === '/'
+                            || $current_directory === 'C:\\'
+                    ) {
                         break;
                     }
 
@@ -103,12 +109,15 @@ final class MobileLintEngine extends ArcanistLintEngine {
                     $current_directory = dirname($current_directory);
                 } while (empty($analysis_path));
 
-                if ($analysis_path != null && !in_array($analysis_path, $analysis_paths)) {
+                if ($analysis_path != null
+                        && !in_array($analysis_path, $analysis_paths)
+                ) {
                     $analysis_paths[] = $analysis_path;
                 }
             }
 
-            $linters[] = id(new ArcanistOCStaticAnalysisLinter())->setPaths($analysis_paths);
+            $linters[] =
+                    id(new ArcanistOCStaticAnalysisLinter())->setPaths($analysis_paths);
         }
 
         $android_paths = preg_grep('/\.(java|xml)$/', $paths);
@@ -129,7 +138,9 @@ final class MobileLintEngine extends ArcanistLintEngine {
                 $analysis_path = null;
 
                 do {
-                    if ($current_directory === '/' || $current_directory === 'C:\\') {
+                    if ($current_directory === '/'
+                            || $current_directory === 'C:\\'
+                    ) {
                         break;
                     }
 
@@ -156,7 +167,8 @@ final class MobileLintEngine extends ArcanistLintEngine {
                 }
             }
 
-            $linters[] = id(new ArcanistAndroidLinter())->setPaths($analysis_paths);
+            $linters[] =
+                    id(new ArcanistAndroidLinter())->setPaths($analysis_paths);
         }
 
         $dotnet_paths = preg_grep('/\.(cs|cshtml|vb|vbhtml|sql)$/', $paths);
@@ -193,7 +205,9 @@ final class MobileLintEngine extends ArcanistLintEngine {
                 $analysis_path = null;
 
                 do {
-                    if ($current_directory === '/' || $current_directory === 'C:\\') {
+                    if ($current_directory === '/'
+                            || $current_directory === 'C:\\'
+                    ) {
                         break;
                     }
 
@@ -212,15 +226,20 @@ final class MobileLintEngine extends ArcanistLintEngine {
                     $current_directory = dirname($current_directory);
                 } while (empty($analysis_path));
 
-                if ($analysis_path != null && !in_array($analysis_path, $analysis_paths)) {
+                if ($analysis_path != null
+                        && !in_array($analysis_path, $analysis_paths)
+                ) {
                     $analysis_paths[] = $analysis_path;
                 }
             }
 
-            $linters[] = id(new ArcanistReSharperLinter())->setPaths($analysis_paths);
+            $linters[] =
+                    id(new ArcanistReSharperLinter())->setPaths($analysis_paths);
         }
 
-        $linters[] = id(new ArcanistXHPASTLinter())->setPaths(preg_grep('/\.php$/', $paths));
+        $linters[] =
+                id(new ArcanistXHPASTLinter())->setPaths(preg_grep('/\.php$/',
+                    $paths));
 
         $merge_conflict_linter = id(new ArcanistMergeConflictLinter());
 
@@ -232,10 +251,12 @@ final class MobileLintEngine extends ArcanistLintEngine {
         $linters[] = $merge_conflict_linter;
 
         // allow for copyright license to be enforced for projects that opt in
-        $check_copyright = $this->getWorkingCopy()->getConfig('check_copyright');
+        $check_copyright =
+                $this->getWorkingCopy()->getConfig('check_copyright');
         if ($check_copyright) {
             $copyright_paths = preg_grep('/\.(cs|vb|java|h|php)$/', $paths);
-            $linters[] = id(new ArcanistCustomLicenseLinter())->setPaths($copyright_paths);
+            $linters[] =
+                    id(new ArcanistCustomLicenseLinter())->setPaths($copyright_paths);
         }
 
         return $linters;

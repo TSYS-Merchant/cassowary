@@ -30,10 +30,10 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 /**
-* Adds a custom license to source files.
-*
-* @group linter
-*/
+ * Adds a custom license to source files.
+ *
+ * @group linter
+ */
 final class ArcanistCustomLicenseLinter extends ArcanistLinter {
     const LINT_NO_LICENSE_HEADER = 1;
 
@@ -46,9 +46,9 @@ final class ArcanistCustomLicenseLinter extends ArcanistLinter {
     }
 
     public function getLintNameMap() {
-      return array(
-        self::LINT_NO_LICENSE_HEADER   => 'No License Header',
-      );
+        return array(
+            self::LINT_NO_LICENSE_HEADER => 'No License Header',
+        );
     }
 
     public function getLinterName() {
@@ -95,11 +95,11 @@ EOLICENSE;
 
     protected function getLicensePatterns() {
         $maybe_php_or_script = '(#![^\n]+?[\n])?(<[?]php\s+?)?';
-    return array(
-      "@^{$maybe_php_or_script}//[^\n]*Copyright[^\n]*[\n]\s*@i",
-      "@^{$maybe_php_or_script}/[*](?:[^*]|[*][^/])*?Copyright.*?[*]/\s*@is",
-      "@^{$maybe_php_or_script}\s*@",
-    );
+        return array(
+            "@^{$maybe_php_or_script}//[^\n]*Copyright[^\n]*[\n]\s*@i",
+            "@^{$maybe_php_or_script}/[*](?:[^*]|[*][^/])*?Copyright.*?[*]/\s*@is",
+            "@^{$maybe_php_or_script}\s*@",
+        );
     }
 
     public function lintPath($path) {
@@ -122,13 +122,13 @@ EOLICENSE;
         foreach ($patterns as $pattern) {
             if (preg_match($pattern, $data, $matches)) {
                 $expect = rtrim(implode('', array_slice($matches, 1)))
-                    ."\r\n".$license;
+                        . "\r\n" . $license;
                 if (trim($matches[0]) != trim($expect)) {
                     $this->raiseLintAtOffset(
                         0,
                         self::LINT_NO_LICENSE_HEADER,
-                        'This file has a missing or out of date "
-                            ."license header.',
+                            'This file has a missing or out of date '
+                            . 'license header.',
                         $matches[0],
                         ltrim($expect));
                 }

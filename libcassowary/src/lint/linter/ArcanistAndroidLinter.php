@@ -66,6 +66,10 @@ final class ArcanistAndroidLinter extends ArcanistLinter {
         return array();
     }
 
+    protected function shouldLintDirectories() {
+        return true;
+    }
+
     public function lintPath($path) {
         $lint_bin = $this->getLintPath();
         $path_on_disk = $this->getEngine()->getFilePathOnDisk($path);
@@ -105,12 +109,13 @@ final class ArcanistAndroidLinter extends ArcanistLinter {
             . "version. Cassowary needs an update to match.");
         }
 
+        $messages = array();
         foreach ($filexml as $issue) {
             $loc_attrs = $issue->location->attributes();
             $issue_attrs = $issue->attributes();
 
             $message = new ArcanistLintMessage();
-            $message->setPath($loc_attrs->file);
+            $message->setPath((string)$loc_attrs->file);
             // Line number and column are irrelevant for
             // artwork and other assets
             if (isset($loc_attrs->line)) {
@@ -141,6 +146,14 @@ final class ArcanistAndroidLinter extends ArcanistLinter {
             // Skip line number check, since we're linting the whole project
             $message->setBypassChangedLineFiltering(true);
 
+            $messages[$message->getPath() . ':'
+            . $message->getLine() . ':'
+            . $message->getChar() . ':'
+            . $message->getName() . ':'
+            . $message->getDescription()] = $message;
+        }
+
+        foreach ($messages as $message) {
             $this->addLintMessage($message);
         }
 

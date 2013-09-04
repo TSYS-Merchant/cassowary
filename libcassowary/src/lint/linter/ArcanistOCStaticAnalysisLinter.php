@@ -30,10 +30,10 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 /**
-* Uses Clang's static analysis tools to find warnings such as memory leaks.
-*
-* @group linter
-*/
+ * Uses Clang's static analysis tools to find warnings such as memory leaks.
+ *
+ * @group linter
+ */
 final class ArcanistOCStaticAnalysisLinter extends ArcanistLinter {
     public function willLintPaths(array $paths) {
         return;
@@ -51,18 +51,26 @@ final class ArcanistOCStaticAnalysisLinter extends ArcanistLinter {
         return array();
     }
 
+    protected function shouldLintDirectories() {
+        return true;
+    }
+
     public function lintPath($path) {
         chdir($path);
 
         $stdout = array();
         $_ = 0;
-        exec(phutil_get_library_root("libcassowary").
-              "/../../externals/xctool/xctool.sh -reporter json-stream clean build RUN_CLANG_STATIC_ANALYZER=YES", $stdout, $_);
+        exec(phutil_get_library_root("libcassowary") .
+        "/../../externals/xctool/xctool.sh -reporter json-stream clean build RUN_CLANG_STATIC_ANALYZER=YES",
+            $stdout, $_);
         foreach ($stdout as $line) {
             $resultItem = json_decode($line, true);
 
             $matches = array();
-            if (isset($resultItem['emittedOutputText']) && $c = preg_match_all("/((?:\\/[\\w\\.\\-]+)+):(\\d+):(\\d+): ((?:[a-z][a-z]+)): (\w+(\s+\w+)*)/is", $resultItem['emittedOutputText'], $matches)) {
+            if (isset($resultItem['emittedOutputText']) && $c =
+                            preg_match_all("/((?:\\/[\\w\\.\\-]+)+):(\\d+):(\\d+): ((?:[a-z][a-z]+)): (\w+(\s+\w+)*)/is",
+                                $resultItem['emittedOutputText'], $matches)
+            ) {
                 $message = new ArcanistLintMessage();
                 $message->setPath($matches[1][0]);
                 $message->setLine($matches[2][0]);
