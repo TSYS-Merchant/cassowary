@@ -57,7 +57,7 @@ final class OCUnitTestEngine extends ArcanistBaseUnitTestEngine {
 
                 /* Stripping last level */
                 $last = strrchr($root_path, "/");
-                $root_path = str_replace($last, "", $root_path);
+                $root_path = substr_replace($root_path, "", strrpos($root_path, $last), strlen($last));
             } while ($last);
         }
 
