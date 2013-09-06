@@ -105,9 +105,27 @@ final class MobileUnitTestEngine extends ArcanistBaseUnitTestEngine {
         }
 
         foreach ($android_test_paths as $path) {
+            // Checking For and Updating Library Projects
+            $library_paths = array();
+            chdir($path);
+            $properties = file('project.properties', FILE_SKIP_EMPTY_LINES);
+            foreach ($properties as $item) {
+                if (strpos($item, 'android.library.reference') !== false) {
+                    $library_path = substr($item, strpos($item, "=") + 1);
+                    $library_path = chop($library_path);
+                    array_push($library_paths, $library_path);
+                }
+            }
+            if (count($library_paths) > 0) {
+                foreach ($library_paths as $library_path) {
+                    chdir($path);
+                    chdir($library_path);
+                    list ($err, $stdout, $stderr) = exec_manual('android update project --path . --subprojects');
+                }
+            }
+
             // Building Main Package
             chdir($path);
-            exec("ant clean");
             exec("android update project --path .");
 
             $output = array();
@@ -121,6 +139,7 @@ final class MobileUnitTestEngine extends ArcanistBaseUnitTestEngine {
 
             // Building Test Package
             chdir($path . "/tests");
+            exec("android update test-project --path . -m ..");
             exec("ant debug -d", $output, $result);
 
             if ($result != 0) {
