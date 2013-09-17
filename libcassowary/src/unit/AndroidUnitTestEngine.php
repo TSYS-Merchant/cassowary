@@ -28,40 +28,41 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 /**
-* AndroidUnit wrapper
-*
-* To use, set unit_engine in .arcconfig, or use --engine flag
-* with arc unit. Currently supports only class & test files
-* (no directory support). Runs on top of android.test.InstrumentionTestRunner.
-*
-* @group unitrun
-*/
+ * AndroidUnit wrapper
+ *
+ * To use, set unit_engine in .arcconfig, or use --engine flag
+ * with arc unit. Currently supports only class & test files
+ * (no directory support). Runs on top of android.test.InstrumentionTestRunner.
+ *
+ * @group unitrun
+ */
 final class AndroidUnitTestEngine extends ArcanistBaseUnitTestEngine {
     private $projectRoot;
 
     public function run() {
         $this->projectRoot = $this->getWorkingCopy()->getProjectRoot();
-        $result_array = array();
         $test_paths = array();
 
         // Looking for project root directory
         foreach ($this->getPaths() as $path) {
-            $root_path = $this->projectRoot."/".$path;
+            $root_path = $this->projectRoot . "/" . $path;
 
             // Checking all levels of path
             do {
                 // Project root should have AndroidManifest.xml
                 // We only want projects that have tests
                 // Only add path once per project
-                if (file_exists($root_path."/AndroidManifest.xml")
-                && file_exists($root_path."/tests")
-                && !in_array($root_path, $test_paths)) {
+                if (file_exists($root_path . "/AndroidManifest.xml")
+                        && file_exists($root_path . "/tests")
+                        && !in_array($root_path, $test_paths)
+                ) {
                     array_push($test_paths, $root_path);
                 }
 
                 // Stripping last level
                 $last = strrchr($root_path, "/");
-                $root_path = substr_replace($root_path, "", strrpos($root_path, $last), strlen($last));
+                $root_path = substr_replace($root_path, "",
+                    strrpos($root_path, $last), strlen($last));
             } while ($last);
         }
 
@@ -87,7 +88,8 @@ final class AndroidUnitTestEngine extends ArcanistBaseUnitTestEngine {
                 foreach ($library_paths as $library_path) {
                     chdir($path);
                     chdir($library_path);
-                    list ($err, $stdout, $stderr) = exec_manual('android update project --path . --subprojects');
+                    list ($err, $stdout, $stderr) =
+                            exec_manual('android update project --path . --subprojects');
                 }
             }
 
@@ -118,121 +120,131 @@ final class AndroidUnitTestEngine extends ArcanistBaseUnitTestEngine {
         // Installing packages
         foreach ($test_paths as $path) {
             // Installing Main Package
-            chdir($path."/bin");
-            exec("adb install -r *.apk");
-
+            chdir($path . "/bin");
+            list($err, $out) = exec_manual("adb install -r *-debug.apk");
+            if (strpos($out, 'Failure') !== false) {
+                $msg = '';
+                $matches = null;
+                if (preg_match('/Failure \[?(\w+)\]?/', $out, $matches) > 0) {
+                    $msg = $matches[1];
+                }
+                throw new RuntimeException('Unable to install app APK: '
+                . $msg);
+            }
 
             // Installing test package
-            chdir($path."/tests/bin");
-            exec("adb install -r *-debug.apk");
+            chdir($path . "/tests/bin");
+            list($err) = exec_manual("adb install -r *-debug.apk");
+            if (strpos($out, 'Failure') !== false) {
+                $msg = '';
+                $matches = null;
+                if (preg_match('/Failure \[?(\w+)\]?/', $out, $matches) > 0) {
+                    $msg = $matches[1];
+                }
+                throw new RuntimeException('Unable to install test APK: '
+                . $msg);
+            }
         }
 
         // Running tests after parsing test package name
+        $descriptorspec = array(
+            0 => array("pipe", "r"),
+            1 => array("pipe", "w"),
+            2 => array("pipe", "w"));
+        $result_array = array();
         foreach ($test_paths as $path) {
-            chdir($path."/tests");
+            chdir($path . "/tests");
 
             $xml = simplexml_load_file("AndroidManifest.xml");
 
             $test_package = $xml->attributes()->package;
 
-            $test_command = "adb shell am instrument -w ".$test_package."/android.test.InstrumentationTestRunner";
+            $test_command = "adb shell am instrument -r -w "
+                    . $test_package . "/android.test.InstrumentationTestRunner";
 
-            $test_output = array();
-            $result = 0;
-            exec($test_command, $test_output, $result);
-            $test_result = $this->parseOutput($test_output);
-            $result_array = array_merge($result_array, $test_result);
+            $pipes = null;
+            $process = proc_open($test_command, $descriptorspec, $pipes,
+                realpath('./'));
 
-            if ($result != 0) {
-                throw new RuntimeException("Unable to run command [".$test_command."]"."\n".$test_output);
+            $test_number = 1;
+            $test_total = 0;
+            $test_class = '';
+            $test_name = '';
+            $user_data = null;
+            $result = null;
+
+            while ($line = fgets($pipes[1])) {
+                if (!preg_match('/^INSTRUMENTATION_(\w+): (.*?)$/',
+                    trim($line),
+                    $matches)
+                ) {
+                    continue;
+                }
+
+                if ($matches[1] == 'STATUS_CODE') {
+                    $status = $matches[2];
+                    if ($status == 0) {
+                        echo "\033[42m\033[1m PASS \033[0m\033[0m\n";
+
+                        $result = new ArcanistUnitTestResult();
+                        $result
+                                ->setResult(ArcanistUnitTestResult::RESULT_PASS)
+                                ->setName($test_name);
+                        $result_array[] = $result;
+
+                        $test_class = '';
+                        $test_name = '';
+                    } else if ($status == -1) {
+                        echo "\033[41m\033[1m BROKEN \033[0m\033[0m\n";
+
+                        $result = new ArcanistUnitTestResult();
+                        $result
+                                ->setResult(ArcanistUnitTestResult::RESULT_BROKEN)
+                                ->setName($test_name);
+                        $result_array[] = $result;
+
+                        $test_class = '';
+                        $test_name = '';
+                    } else if ($status == 1) {
+                        echo '(' . $test_number . '/' . $test_total . ') ' .
+                                $test_name . ' in ' . $test_class . '...';
+                    }
+                } else if ($matches[1] == 'STATUS') {
+                    $fields = explode('=', $matches[2]);
+                    if (count($fields) == 2) {
+                        if ($fields[0] == 'current') {
+                            $test_number = $fields[1];
+                        } else if ($fields[0] == 'numtests') {
+                            $test_total = $fields[1];
+                        } else if ($fields[0] == 'class') {
+                            $test_class = $fields[1];
+                        } else if ($fields[0] == 'test') {
+                            $test_name = $fields[1];
+                        }
+                    }
+                } else if ($matches[1] == 'RESULT') {
+                    $fields = explode('=', $matches[2]);
+                    if (count($fields) == 2) {
+                        if ($fields[0] == 'longMsg') {
+                            echo "\033[41m\033[1m FAIL \033[0m\033[0m: "
+                                    . $fields[1] . "\n";
+
+                            $result = new ArcanistUnitTestResult();
+                            $result
+                                    ->setResult(ArcanistUnitTestResult::RESULT_FAIL)
+                                    ->setName($test_name);
+                            $result_array[] = $result;
+                        }
+                    }
+                }
             }
+            proc_close($process);
         }
 
         return $result_array;
     }
 
-    private function parseOutput($test_output) {
-
-        // Parsing output from test program.
-        // Currently Android InstrumentationTestRunner does give option of nicely format output for report
-
-        $state = 0;
-        $user_data = null;
-        $result = null;
-        $result_array = array();
-
-        foreach ($test_output as $line) {
-
-            switch ($state) {
-                // Looking for test name
-                case 0:
-                if ($line == "") { break; }
-
-                // Parsing Failures
-                // There can be several failures in one report
-                $test = strstr($line, "Failure");
-                if ($test != false) {
-                    if ($result == null) {
-                        $result = new ArcanistUnitTestResult();
-                        $result->setResult(ArcanistUnitTestResult::RESULT_FAIL);
-                    }
-
-                    // Getting test name. Should be in third position
-                    strtok($test, ' ');
-                    strtok(' ');
-                    $test_name = strtok(' ');
-                    $test_name = str_replace(':', '', $test_name);
-
-                    // Making sure not to grab this line which also
-                    // contains Failure string
-                    if ($test_name != "Errors") {
-                        $state = 1;
-                        $result->setName($test_name);
-                    }
-
-                    break;
-                }
-
-                // Parsing OK
-                // There can be several failures or 1 OK in report
-                $test = strstr($line, "OK (");
-                if ($test != false) {
-                    $result = new ArcanistUnitTestResult();
-                    $result->setResult(ArcanistUnitTestResult::RESULT_PASS);
-                    $result->setName("All Unit Tests");
-                    array_push($result_array, $result);
-                }
-
-                // Parsing Error
-                $test = strstr($line, "Error in ");
-                if ($test != false) {
-                    $result = new ArcanistUnitTestResult();
-                    $result->setResult(ArcanistUnitTestResult::RESULT_BROKEN);
-                    $state = 1;
-                }
-
-                // Looking for stack trace
-                case 1:
-
-                // Reached the end of trace
-                if ($line == "") {
-                    $result->setUserData($user_data);
-                    array_push($result_array, $result);
-                    $result = null;
-                    $user_data = null;
-
-                    $state = 0;
-                } else {
-                    $user_data .= $line."\n";
-                }
-
-                break;
-
-                default:
-                break;
-            }
-        }
-
-        return $result_array;
+    public function shouldEchoTestResults() {
+        return false;
     }
 }
