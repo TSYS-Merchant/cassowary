@@ -80,13 +80,12 @@ final class AndroidUnitTestEngine extends ArcanistBaseUnitTestEngine {
             foreach ($properties as $item) {
                 if (strpos($item, 'android.library.reference') !== false) {
                     $library_path = substr($item, strpos($item, "=") + 1);
-                    $library_path = chop($library_path);
+                    $library_path = realpath(chop($library_path));
                     array_push($library_paths, $library_path);
                 }
             }
             if (count($library_paths) > 0) {
                 foreach ($library_paths as $library_path) {
-                    chdir($path);
                     chdir($library_path);
                     list ($err, $stdout, $stderr) =
                             exec_manual('android update project --path . --subprojects');
@@ -99,7 +98,7 @@ final class AndroidUnitTestEngine extends ArcanistBaseUnitTestEngine {
 
             $output = array();
             $result = 0;
-            exec("ant debug -d", $output, $result);
+            exec("ant clean debug -d", $output, $result);
 
             if ($result != 0) {
                 print_r($output);
@@ -109,7 +108,7 @@ final class AndroidUnitTestEngine extends ArcanistBaseUnitTestEngine {
             // Building Test Package
             chdir($path . "/tests");
             exec("android update test-project --path . -m ..");
-            exec("ant debug -d", $output, $result);
+            exec("ant clean debug -d", $output, $result);
 
             if ($result != 0) {
                 print_r($output);
@@ -117,11 +116,29 @@ final class AndroidUnitTestEngine extends ArcanistBaseUnitTestEngine {
             }
         }
 
+        $devices = array();
+        list($err, $out) = exec_manual('adb devices');
+        $lines = explode("\n", $out);
+        foreach ($lines as $line) {
+            $split = explode("\t", trim($line));
+            if (count($split) > 1) {
+                $devices[] = $split[0];
+            }
+        }
+
+        $device_switch = '';
+        if (count($devices) == 0) {
+            echo "No device attached. Waiting for device...\n";
+        } else {
+            $device_switch = '-s ' . $devices[0];
+        }
+
         // Installing packages
         foreach ($test_paths as $path) {
             // Installing Main Package
             chdir($path . "/bin");
-            list($err, $out) = exec_manual("adb install -r *-debug.apk");
+            list($err, $out) = exec_manual("adb %s install -r *-debug.apk",
+                $device_switch);
             if (strpos($out, 'Failure') !== false) {
                 $msg = '';
                 $matches = null;
@@ -134,7 +151,8 @@ final class AndroidUnitTestEngine extends ArcanistBaseUnitTestEngine {
 
             // Installing test package
             chdir($path . "/tests/bin");
-            list($err) = exec_manual("adb install -r *-debug.apk");
+            list($err) = exec_manual("adb %s install -r *-debug.apk",
+                $device_switch);
             if (strpos($out, 'Failure') !== false) {
                 $msg = '';
                 $matches = null;
@@ -159,7 +177,8 @@ final class AndroidUnitTestEngine extends ArcanistBaseUnitTestEngine {
 
             $test_package = $xml->attributes()->package;
 
-            $test_command = "adb shell am instrument -r -w "
+            $test_command = "adb " . $device_switch
+                    . " shell am instrument -r -w "
                     . $test_package . "/android.test.InstrumentationTestRunner";
 
             $pipes = null;
