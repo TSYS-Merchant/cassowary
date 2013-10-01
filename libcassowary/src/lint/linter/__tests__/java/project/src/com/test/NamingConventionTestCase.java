@@ -2,10 +2,11 @@
 package com.test;
 
 public class NamingConventionTestCase {
-    // public static final int notAConstant = 1;
+    public static final int notAConstant = 1;
     public static final int ACTUALLY_A_CONSTANT = 2;
 
     private static int sStatic;
+    private static int mStatic;
 
     private int mPrivate;
     private int mPrivate2, private3;
