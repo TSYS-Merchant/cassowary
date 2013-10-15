@@ -53,6 +53,18 @@ final class ArcanistMobileGeneratedLinter extends ArcanistLinter {
     }
 
     public function lintPath($path) {
+        // minified JavaScript
+        if (substr($path, -7) == '.min.js') {
+            $this->stopAllLinters();
+            return;
+        }
+
+        // minified CSS
+        if (substr($path, -8) == '.min.css') {
+            $this->stopAllLinters();
+            return;
+        }
+
         $path_on_disk = $this->getEngine()->getFilePathOnDisk($path);
 
         if ($this->getEngine()->isBinaryFile($path_on_disk)) {
