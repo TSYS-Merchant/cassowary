@@ -145,7 +145,8 @@ public class NamingConventionDetector extends Detector implements
                         }
                     } else if (modifiers.isProtected()
                             || modifiers.isPrivate()) {
-                        if (cd == null || cd.astModifiers().isPublic()) {
+                        if (cd == null ||
+                                getClassDeclaration(cd.getParent()) == null) {
                             // mMember
                             if (!name.matches("^m[A-Z].*")) {
                                 mContext.report(

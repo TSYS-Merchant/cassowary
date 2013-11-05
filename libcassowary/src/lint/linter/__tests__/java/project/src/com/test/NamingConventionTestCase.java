@@ -18,6 +18,19 @@ public class NamingConventionTestCase {
     }
 
     private class Inner {
+        private int mPrivate;
+        private int pPrivate;
+        protected int pProtected;
+        public int publicVar;
+    }
+}
+
+class NamingConventionTestCase2 {
+    private int mPrivate;
+    private int pPrivate;
+
+    class Inner {
+        private int mPrivate;
         private int pPrivate;
         protected int pProtected;
         public int publicVar;
