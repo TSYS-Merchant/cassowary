@@ -98,7 +98,7 @@ final class ArcanistAndroidLinter extends ArcanistLinter {
             throw new ArcanistUsageException("Error executing lint command");
         }
 
-        $filexml = simplexml_load_file($arc_lint_location);
+        $filexml = simplexml_load_string(file_get_contents($arc_lint_location));
 
         if ($filexml->attributes()->format < 4) {
             throw new ArcanistUsageException("Unsupported Android lint output "
