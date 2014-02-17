@@ -178,7 +178,8 @@ final class AndroidUnitTestEngine extends ArcanistBaseUnitTestEngine {
         foreach ($test_paths as $path) {
             chdir($path . "/tests");
 
-            $xml = simplexml_load_file("AndroidManifest.xml");
+            $xml = simplexml_load_string(
+                file_get_contents("AndroidManifest.xml"));
 
             $test_package = $xml->attributes()->package;
 

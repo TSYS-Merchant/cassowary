@@ -225,7 +225,8 @@ final class MobileUnitTestEngine extends ArcanistBaseUnitTestEngine {
             foreach ($android_test_paths as $path) {
                 chdir($path . "/tests");
 
-                $xml = simplexml_load_file("AndroidManifest.xml");
+                $xml = simplexml_load_string(
+                    file_get_contents("AndroidManifest.xml"));
 
                 $test_package = $xml->attributes()->package;
 

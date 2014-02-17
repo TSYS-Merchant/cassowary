@@ -64,14 +64,14 @@ final class ArcanistReSharperLinter extends ArcanistLinter {
             return;
         }
 
-        $filexml = simplexml_load_file($lint_output);
+        $filexml = simplexml_load_string(file_get_contents($lint_output));
 
         if ($filexml->attributes()->ToolsVersion < 8.0) {
             throw new ArcanistUsageException("Unsupported Command Line Tools "
-            ."output version. Please update to the latest version.");
+            . "output version. Please update to the latest version.");
         } else if ($filexml->attributes()->ToolsVersion > 8.0) {
             throw new ArcanistUsageException("Unsupported Command Line Tools "
-            ."output version. Cassowary needs an update to match.");
+            . "output version. Cassowary needs an update to match.");
         }
 
         $severity_map = array();
@@ -79,17 +79,17 @@ final class ArcanistReSharperLinter extends ArcanistLinter {
         foreach ($filexml->xpath('//IssueType') as $issue_type) {
             if ($issue_type->attributes()->Severity == 'ERROR') {
                 $severity_map[(string)$issue_type->attributes()->Id] =
-                    ArcanistLintSeverity::SEVERITY_ERROR;
+                        ArcanistLintSeverity::SEVERITY_ERROR;
             } else if ($issue_type->attributes()->Severity == 'WARNING') {
                 $severity_map[(string)$issue_type->attributes()->Id] =
-                    ArcanistLintSeverity::SEVERITY_WARNING;
+                        ArcanistLintSeverity::SEVERITY_WARNING;
             } else {
                 $severity_map[(string)$issue_type->attributes()->Id] =
-                    ArcanistLintSeverity::SEVERITY_ADVICE;
+                        ArcanistLintSeverity::SEVERITY_ADVICE;
             }
 
             $name_map[(string)$issue_type->attributes()->Id] =
-                $issue_type->attributes()->Description;
+                    $issue_type->attributes()->Description;
         }
 
         foreach ($filexml->xpath('//Issue') as $issue) {
