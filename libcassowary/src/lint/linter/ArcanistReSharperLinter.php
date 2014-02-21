@@ -37,9 +37,122 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  * @group linter
  */
 final class ArcanistReSharperLinter extends ArcanistLinter {
+    private $allLintResults;
 
     public function willLintPaths(array $paths) {
-        return;
+        $this->allLintResults = array();
+        $analysis_paths = array();
+        $filesystem_paths = array();
+
+        foreach ($paths as $key => $path) {
+            $path_on_disk = $this->getEngine()->getFilePathOnDisk($path);
+            $current_directory = dirname($path_on_disk);
+            $filesystem_paths[] = Filesystem::resolvePath($path_on_disk,
+                $current_directory);
+            $analysis_path = null;
+
+            do {
+                if ($current_directory === '/'
+                        || $current_directory === 'C:\\'
+                ) {
+                    break;
+                }
+
+                foreach (new DirectoryIterator($current_directory) as $file) {
+                    if (!$file->isFile()) {
+                        continue;
+                    }
+
+                    // if a .sln file can be found we know
+                    // we're in the correct place
+                    if ($file->getExtension() == 'sln') {
+                        $analysis_path = $file->getPathname();
+                    }
+                }
+
+                $current_directory = dirname($current_directory);
+            } while (empty($analysis_path));
+
+            if ($analysis_path != null
+                    && !in_array($analysis_path, $analysis_paths)
+            ) {
+                $analysis_paths[] = $analysis_path;
+            }
+        }
+
+        foreach ($analysis_paths as $key => $path) {
+            $lint_output = tempnam(sys_get_temp_dir(), 'arclint.xml');
+            $path_on_disk = $this->getEngine()->getFilePathOnDisk($path);
+
+            execx('inspectcode %s /o=%s', $path_on_disk, $lint_output);
+
+            $filexml = simplexml_load_string(file_get_contents($lint_output));
+            if (empty($filexml)) {
+                throw new ArcanistUsageException("Unsupported Command Line Tools "
+                . "output version. Please update to the latest version.");
+            }
+
+            if ($filexml->attributes()->ToolsVersion < 8.1) {
+                throw new ArcanistUsageException("Unsupported Command Line Tools "
+                . "output version. Please update to the latest version.");
+            } else if ($filexml->attributes()->ToolsVersion > 8.1) {
+                throw new ArcanistUsageException("Unsupported Command Line Tools "
+                . "output version. Cassowary needs an update to match.");
+            }
+
+            $severity_map = array();
+            $name_map = array();
+            foreach ($filexml->xpath('//IssueType') as $issue_type) {
+                if ($issue_type->attributes()->Severity == 'ERROR') {
+                    $severity_map[(string)$issue_type->attributes()->Id] =
+                            ArcanistLintSeverity::SEVERITY_ERROR;
+                } else if ($issue_type->attributes()->Severity == 'WARNING') {
+                    $severity_map[(string)$issue_type->attributes()->Id] =
+                            ArcanistLintSeverity::SEVERITY_WARNING;
+                } else {
+                    $severity_map[(string)$issue_type->attributes()->Id] =
+                            ArcanistLintSeverity::SEVERITY_ADVICE;
+                }
+
+                $name_map[(string)$issue_type->attributes()->Id] =
+                        $issue_type->attributes()->Description;
+            }
+
+            foreach ($filexml->xpath('//Issue') as $issue) {
+                $linted_file = Filesystem::resolvePath(
+                    (string)$issue->attributes()->File,
+                    dirname($path_on_disk));
+
+                if (empty($linted_file) || !in_array($linted_file,
+                        $filesystem_paths)) {
+                    continue;
+                }
+
+                $message = new ArcanistLintMessage();
+                $message->setPath($linted_file);
+
+                $message_line = intval($issue->attributes()->Line);
+                if ($message_line > 0) {
+                    $message->setLine($message_line);
+                }
+
+                $message->setName(
+                    (string)$name_map[(string)$issue->attributes()->TypeId]);
+                $message->setCode((string)$issue->attributes()->TypeId);
+                $message->setDescription((string)$issue->attributes()->Message);
+                $message->setSeverity(
+                    $severity_map[(string)$issue->attributes()->TypeId]);
+                $message->setBypassChangedLineFiltering(true);
+
+                if (!array_key_exists($linted_file, $this->allLintResults)) {
+                    $this->allLintResults[$linted_file] = array();
+                }
+
+                $this->allLintResults[$linted_file][] = $message;
+            }
+
+            unlink($lint_output);
+        }
     }
 
     public function getLinterName() {
@@ -55,67 +168,10 @@ final class ArcanistReSharperLinter extends ArcanistLinter {
     }
 
     public function lintPath($path) {
-        $lint_output = tempnam(sys_get_temp_dir(), 'arclint.xml');
         $path_on_disk = $this->getEngine()->getFilePathOnDisk($path);
 
-        try {
-            exec("inspectcode {$path_on_disk} /o={$lint_output}");
-        } catch (CommandException $e) {
-            return;
-        }
-
-        $filexml = simplexml_load_string(file_get_contents($lint_output));
-
-        if ($filexml->attributes()->ToolsVersion < 8.0) {
-            throw new ArcanistUsageException("Unsupported Command Line Tools "
-            . "output version. Please update to the latest version.");
-        } else if ($filexml->attributes()->ToolsVersion > 8.0) {
-            throw new ArcanistUsageException("Unsupported Command Line Tools "
-            . "output version. Cassowary needs an update to match.");
-        }
-
-        $severity_map = array();
-        $name_map = array();
-        foreach ($filexml->xpath('//IssueType') as $issue_type) {
-            if ($issue_type->attributes()->Severity == 'ERROR') {
-                $severity_map[(string)$issue_type->attributes()->Id] =
-                        ArcanistLintSeverity::SEVERITY_ERROR;
-            } else if ($issue_type->attributes()->Severity == 'WARNING') {
-                $severity_map[(string)$issue_type->attributes()->Id] =
-                        ArcanistLintSeverity::SEVERITY_WARNING;
-            } else {
-                $severity_map[(string)$issue_type->attributes()->Id] =
-                        ArcanistLintSeverity::SEVERITY_ADVICE;
-            }
-
-            $name_map[(string)$issue_type->attributes()->Id] =
-                    $issue_type->attributes()->Description;
-        }
-
-        foreach ($filexml->xpath('//Issue') as $issue) {
-            $message = new ArcanistLintMessage();
-            $message->setPath(
-                Filesystem::resolvePath((string)$issue->attributes()->File,
-                    dirname($path_on_disk)));
-
-            $message_line = intval($issue->attributes()->Line);
-            if ($message_line > 0) {
-                $message->setLine($message_line);
-            }
-
-            $message->setName(
-                (string)$name_map[(string)$issue->attributes()->TypeId]);
-            $message->setCode((string)$issue->attributes()->TypeId);
-            $message->setDescription((string)$issue->attributes()->Message);
-            $message->setSeverity(
-                $severity_map[(string)$issue->attributes()->TypeId]);
-
-            // Skip line number check, since we're linting the whole project
-            $message->setBypassChangedLineFiltering(true);
-
+        foreach ($this->allLintResults[$path_on_disk] as $key => $message) {
             $this->addLintMessage($message);
         }
-
-        unlink($lint_output);
     }
 }
