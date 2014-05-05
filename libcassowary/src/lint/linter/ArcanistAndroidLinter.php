@@ -50,6 +50,58 @@ final class ArcanistAndroidLinter extends ArcanistLinter {
         return trim($stdout);
     }
 
+    private function getGradlePath()
+    {
+        $gradle_bin = "gradle";
+
+        list($err, $stdout) = exec_manual('which %s', $gradle_bin);
+        if ($err) {
+            throw new ArcanistUsageException("Gradle does not appear to be "
+                . "available on the path. Make sure that the Gradle "
+                . "directory is part of your path.");
+        }
+
+        return trim($stdout);
+    }
+
+    private function runGradle($path)
+    {
+        $gradle_bin = join('/', array(rtrim($path, '/'), "gradlew"));
+        if (!file_exists($gradle_bin)) {
+            $gradle_bin = $this->getGradlePath();
+        }
+
+        $cwd = getcwd();
+        $path_on_disk = $this->getEngine()->getFilePathOnDisk($path);
+        chdir($path_on_disk);
+        list($err) = exec_manual(
+            '%s :lint', $gradle_bin
+        );
+        chdir($cwd);
+
+        if ($err != 0 && $err != 1) {
+            throw new ArcanistUsageException("Error executing gradle command");
+        }
+
+        return join('/', array(rtrim($path, '/'), "build/lint-results.xml"));
+    }
+
+    private function runLint($path)
+    {
+        $lint_bin = $this->getLintPath();
+        $path_on_disk = $this->getEngine()->getFilePathOnDisk($path);
+        $arc_lint_location = tempnam(sys_get_temp_dir(), 'arclint.xml');
+
+        list($err) = exec_manual(
+            '%s --showall --nolines --fullpath --quiet --xml %s %s',
+            $lint_bin, $arc_lint_location, $path_on_disk);
+        if ($err != 0 && $err != 1) {
+            throw new ArcanistUsageException("Error executing lint command");
+        }
+
+        return $arc_lint_location;
+    }
+
     public function willLintPaths(array $paths) {
         return;
     }
@@ -72,9 +124,6 @@ final class ArcanistAndroidLinter extends ArcanistLinter {
 
     public function lintPath($path) {
         $lint_bin = $this->getLintPath();
-        $path_on_disk = $this->getEngine()->getFilePathOnDisk($path);
-        $arc_lint_location = tempnam(sys_get_temp_dir(), 'arclint.xml');
-
         $extra_rule_project_path = phutil_get_library_root('libcassowary') .
                 '/../support/lint/android';
         $extra_rule_jar_file = dirname(__FILE__) .
@@ -91,11 +140,11 @@ final class ArcanistAndroidLinter extends ArcanistLinter {
 
         putenv('ANDROID_LINT_JARS=' . $extra_rule_jar_file);
 
-        list($err) = exec_manual(
-            '%s --showall --nolines --fullpath --quiet --xml %s %s',
-            $lint_bin, $arc_lint_location, $path_on_disk);
-        if ($err != 0 && $err != 1) {
-            throw new ArcanistUsageException("Error executing lint command");
+        $gradle_build = join('/', array(rtrim($path, '/'), "build.gradle"));
+        if (file_exists($gradle_build)) {
+            $arc_lint_location = $this->runGradle($path);
+        } else {
+            $arc_lint_location = $this->runLint($path);
         }
 
         $filexml = simplexml_load_string(file_get_contents($arc_lint_location));
