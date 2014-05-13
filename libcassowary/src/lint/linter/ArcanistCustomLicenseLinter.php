@@ -36,6 +36,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 final class ArcanistCustomLicenseLinter extends ArcanistLinter {
     const LINT_NO_LICENSE_HEADER = 1;
+    private $copyrightHolder;
 
     public function willLintPaths(array $paths) {
         return;
@@ -102,12 +103,27 @@ EOLICENSE;
         );
     }
 
-    public function lintPath($path) {
-        $copyright_holder = $this->getConfig('copyright_holder');
-        if ($copyright_holder === null) {
-            $working_copy = $this->getEngine()->getWorkingCopy();
-            $copyright_holder = $working_copy->getConfig('copyright_holder');
+    public function getLinterConfigurationOptions() {
+        return parent::getLinterConfigurationOptions() + array(
+            'copyright_holder' => array(
+                'type' => 'optional string',
+                'help' => pht('Specify a copyright holder.'),
+            ),
+        );
+    }
+
+    public function setLinterConfigurationValue($key, $value) {
+        switch ($key) {
+            case 'copyright_holder':
+                $this->copyrightHolder = $value;
+                return;
         }
+
+        return parent::setLinterConfigurationValue($key, $value);
+    }
+
+    public function lintPath($path) {
+        $copyright_holder = $this->copyrightHolder;
 
         if (!$copyright_holder) {
             return;
