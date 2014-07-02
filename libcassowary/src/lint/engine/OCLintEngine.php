@@ -106,7 +106,8 @@ final class OCLintEngine extends ArcanistLintEngine {
         }
 
         // allow for copyright license to be enforced for projects that opt in
-        $check_copyright = $this->getWorkingCopy()->getConfig('check_copyright');
+        $check_copyright =
+                $this->getWorkingCopy()->getProjectConfig('check_copyright');
         if ($check_copyright) {
             $header_paths = preg_grep('/\.h$/', $paths);
             $linters[] = id(new ArcanistCustomLicenseLinter())->setPaths($header_paths);

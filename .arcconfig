@@ -1,7 +1,7 @@
 {
   "project_id" : "Cassowary",
   "conduit_uri" : "https://devportal.imobile3.com/",
-  "lint.engine" : "PhutilLintEngine",
+  "lint.engine" : "ComprehensiveLintEngine",
   "unit.engine" : "PhutilUnitTestEngine",
   "load" : [
     "libcassowary/src/"

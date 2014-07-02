@@ -213,7 +213,7 @@ final class MobileLintEngine extends ArcanistLintEngine {
 
         // allow for copyright license to be enforced for projects that opt in
         $check_copyright =
-                $this->getWorkingCopy()->getConfig('check_copyright');
+                $this->getWorkingCopy()->getProjectConfig('check_copyright');
         if ($check_copyright) {
             $copyright_paths = preg_grep('/\.(cs|vb|java|h|php)$/', $paths);
             $linters[] =

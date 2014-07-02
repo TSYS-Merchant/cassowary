@@ -109,7 +109,7 @@ final class AndroidLintEngine extends ArcanistLintEngine {
 
         // allow for copyright license to be enforced for projects that opt in
         $check_copyright =
-                $this->getWorkingCopy()->getConfig('check_copyright');
+                $this->getWorkingCopy()->getProjectConfig('check_copyright');
         if ($check_copyright) {
             $java_paths = preg_grep('/\.java$/', $paths);
             $linters[] =
