@@ -36,7 +36,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * @group unitrun
  */
-final class MobileUnitTestEngine extends ArcanistBaseUnitTestEngine {
+final class MobileUnitTestEngine extends ArcanistUnitTestEngine {
     private $projectRoot;
     private $androidOnly = false;
 

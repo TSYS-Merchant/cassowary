@@ -35,7 +35,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 *
 * @group unitrun
 */
-final class OCUnitTestEngine extends ArcanistBaseUnitTestEngine {
+final class OCUnitTestEngine extends ArcanistUnitTestEngine {
 
     public function run() {
         $this->projectRoot = $this->getWorkingCopy()->getProjectRoot();
