@@ -126,7 +126,7 @@ final class MobileLintEngine extends ArcanistLintEngine {
                     array(
                         ArcanistTextLinter::LINT_LINE_WRAP =>
                         ArcanistLintSeverity::SEVERITY_ADVICE
-                    ))->setMaxLineLength(100);
+                    ))->setMaxLineLength(120);
 
         // locate project directories and run static analysis
         if (count($android_paths) > 0) {
