@@ -68,43 +68,64 @@ final class AndroidLintEngine extends ArcanistLintEngine {
 
         // locate project directories and run static analysis
         if (count($android_paths) > 0) {
-            $analysisPaths = array();
+            $eclipse_paths = array();
+            $gradle_path_modules = array();
 
             foreach ($android_paths as $key => $path) {
                 $path_on_disk = $this->getFilePathOnDisk($path);
-                $currentDirectory = dirname($path_on_disk);
-                $analysisPath = null;
+                $current_directory = dirname($path_on_disk);
+                $eclipse_path = null;
+                $gradle_path = null;
+                $gradle_modules = array();
 
                 do {
-                    if ($currentDirectory === '/') {
+                    if ($current_directory === '/'
+                            || $current_directory === 'C:\\'
+                    ) {
                         break;
                     }
 
-                    foreach (new DirectoryIterator($currentDirectory) as $file) {
-                        if (!$file->isFile()) {
-                            continue;
-                        }
-
-                        // if an AndroidManifest.xml file can be found we know
-                        // we're in the correct place
-                        if ($file->getFilename() === 'AndroidManifest.xml') {
-                            $analysisPath = $file->getPath();
-                        }
+                    if (file_exists($current_directory.'/project.properties')) {
+                        // Eclipse project root
+                        $eclipse_path = $current_directory;
+                    } else if (file_exists($current_directory.'/gradlew')) {
+                        // Gradle project root
+                        $gradle_path = $current_directory;
+                    } else if (file_exists($current_directory.'/build.gradle')) {
+                        // Gradle module root
+                        $gradle_modules[] = basename($current_directory);
                     }
 
-                    $currentDirectory = dirname($currentDirectory);
-                } while (empty($analysisPath));
+                    $current_directory = dirname($current_directory);
+                } while (empty($eclipse_path) && empty($gradle_path));
 
-                if ($analysisPath != null
-                        && !in_array($analysisPath, $analysisPaths)
-                        && preg_match('/tests$/', $analysisPath) == 0
+                if ($eclipse_path != null
+                        && !in_array($eclipse_path, $eclipse_paths)
+                        && preg_match('/tests$/', $eclipse_path) == 0
                 ) {
-                    $analysisPaths[] = $analysisPath;
+                    $eclipse_paths[] = $eclipse_path;
+                }
+
+                if ($gradle_path != null) {
+                    if (!isset($gradle_path_modules[$gradle_path])) {
+                        $gradle_path_modules[$gradle_path] = array();
+                    }
+
+                    foreach ($gradle_modules as $module) {
+                        if (!in_array($module, $gradle_path_modules[$gradle_path])) {
+                            $gradle_path_modules[$gradle_path][] = $module;
+                        }
+                    }
                 }
             }
 
-            $linters[] =
-                    id(new ArcanistAndroidLinter())->setPaths($analysisPaths);
+            $linters[] = id(new ArcanistAndroidLinter(null))
+                    ->setPaths($eclipse_paths);
+
+            foreach ($gradle_path_modules as $path => $modules) {
+                $linters[] = id(new ArcanistAndroidLinter($modules))
+                        ->setPaths(array($path));
+            }
         }
 
         // allow for copyright license to be enforced for projects that opt in

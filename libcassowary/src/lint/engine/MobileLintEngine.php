@@ -130,12 +130,15 @@ final class MobileLintEngine extends ArcanistLintEngine {
 
         // locate project directories and run static analysis
         if (count($android_paths) > 0) {
-            $analysis_paths = array();
+            $eclipse_paths = array();
+            $gradle_path_modules = array();
 
             foreach ($android_paths as $key => $path) {
                 $path_on_disk = $this->getFilePathOnDisk($path);
                 $current_directory = dirname($path_on_disk);
-                $analysis_path = null;
+                $eclipse_path = null;
+                $gradle_path = null;
+                $gradle_modules = array();
 
                 do {
                     if ($current_directory === '/'
@@ -144,31 +147,47 @@ final class MobileLintEngine extends ArcanistLintEngine {
                         break;
                     }
 
-                    foreach (new DirectoryIterator($current_directory) as $file) {
-                        if (!$file->isFile()) {
-                            continue;
-                        }
-
-                        // if an AndroidManifest.xml file can be found
-                        // we know we're in the correct place
-                        if ($file->getFilename() === 'AndroidManifest.xml') {
-                            $analysis_path = $file->getPath();
-                        }
+                    if (file_exists($current_directory.'/project.properties')) {
+                        // Eclipse project root
+                        $eclipse_path = $current_directory;
+                    } else if (file_exists($current_directory.'/gradlew')) {
+                        // Gradle project root
+                        $gradle_path = $current_directory;
+                    } else if (file_exists($current_directory.'/build.gradle')) {
+                        // Gradle module root
+                        $gradle_modules[] = basename($current_directory);
                     }
 
                     $current_directory = dirname($current_directory);
-                } while (empty($analysis_path));
+                } while (empty($eclipse_path) && empty($gradle_path));
 
-                if ($analysis_path != null
-                        && !in_array($analysis_path, $analysis_paths)
-                        && preg_match('/tests$/', $analysis_path) == 0
+                if ($eclipse_path != null
+                        && !in_array($eclipse_path, $eclipse_paths)
+                        && preg_match('/tests$/', $eclipse_path) == 0
                 ) {
-                    $analysis_paths[] = $analysis_path;
+                    $eclipse_paths[] = $eclipse_path;
+                }
+
+                if ($gradle_path != null) {
+                    if (!isset($gradle_path_modules[$gradle_path])) {
+                        $gradle_path_modules[$gradle_path] = array();
+                    }
+
+                    foreach ($gradle_modules as $module) {
+                        if (!in_array($module, $gradle_path_modules[$gradle_path])) {
+                            $gradle_path_modules[$gradle_path][] = $module;
+                        }
+                    }
                 }
             }
 
-            $linters[] =
-                    id(new ArcanistAndroidLinter())->setPaths($analysis_paths);
+            $linters[] = id(new ArcanistAndroidLinter(null))
+                    ->setPaths($eclipse_paths);
+
+            foreach ($gradle_path_modules as $path => $modules) {
+                $linters[] = id(new ArcanistAndroidLinter($modules))
+                        ->setPaths(array($path));
+            }
         }
 
         $dotnet_paths = preg_grep('/\.(cs|cshtml|vb|vbhtml|sql)$/', $paths);
