@@ -144,30 +144,15 @@ public class NamingConventionDetector extends Detector implements
                                     name);
                         }
                     } else if (modifiers.isProtected()
-                            || modifiers.isPrivate()) {
-                        if (cd == null ||
-                                getClassDeclaration(cd.getParent()) == null) {
-                            // mMember
-                            if (!name.matches("^m[A-Z].*")) {
-                                mContext.report(
-                                        ISSUE_VARIABLE_NAMING_CONVENTION,
-                                        node,
-                                        mContext.getLocation(node),
-                                        "Member variable names should " +
-                                                "begin with \"m\".",
-                                        name);
-                            }
-                        } else { // pPrivateClassMember
-                            if (!name.matches("^p[A-Z].*")) {
-                                mContext.report(
-                                        ISSUE_VARIABLE_NAMING_CONVENTION,
-                                        node,
-                                        mContext.getLocation(node),
-                                        "Member variable names in private " +
-                                                "classes should begin with " +
-                                                "\"p\".",
-                                        name);
-                            }
+                            || modifiers.isPrivate()) { // mMember
+                        if (!name.matches("^m[A-Z].*")) {
+                            mContext.report(
+                                    ISSUE_VARIABLE_NAMING_CONVENTION,
+                                    node,
+                                    mContext.getLocation(node),
+                                    "Member variable names should " +
+                                            "begin with \"m\".",
+                                    name);
                         }
                     } else { // camelCase
                         if (name.matches("^[A-Z].*")) {

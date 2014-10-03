@@ -19,8 +19,7 @@ public class NamingConventionTestCase {
 
     private class Inner {
         private int mPrivate;
-        private int pPrivate;
-        protected int pProtected;
+        protected int protectedVar;
         public int publicVar;
     }
 }
@@ -31,8 +30,6 @@ class NamingConventionTestCase2 {
 
     class Inner {
         private int mPrivate;
-        private int pPrivate;
-        protected int pProtected;
         public int publicVar;
     }
 }
