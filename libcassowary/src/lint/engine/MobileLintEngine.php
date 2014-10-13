@@ -31,7 +31,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 /**
  * Comprehensive linter that takes the various platform-specific linters
- * (OCUnit, Android, DotNet) and combines them into one unified use case.
+ * and combines them into one unified use case.
  *
  * @group linter
  */

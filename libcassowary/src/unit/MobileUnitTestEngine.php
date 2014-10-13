@@ -29,7 +29,7 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 /**
  * Comprehensive linter that takes the various platform-specific linters
- * (OCUnit, Android) and combines them into one unified use case.
+ * and combines them into one unified use case.
  *
  * To use, set unit_engine in .arcconfig, or use --engine flag
  * with arc unit.
