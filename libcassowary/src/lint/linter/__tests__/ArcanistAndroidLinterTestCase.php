@@ -3,9 +3,9 @@
 final class ArcanistAndroidLinterTestCase extends ArcanistLinterTestCase {
 
     /**
-     * Tests the Android naming convention linter
+     * Tests the custom Android linters
      */
-    public function testNamingConvention() {
+    public function testAndroidLinter() {
         $linter = new ArcanistAndroidLinter(null);
         $working_copy = ArcanistWorkingCopyIdentity::newFromPath(__FILE__);
         $this->executeTestsInDirectory(
