@@ -120,7 +120,7 @@ final class MobileLintEngine extends ArcanistLintEngine {
                     id(new ArcanistOCStaticAnalysisLinter())->setPaths($analysis_paths);
         }
 
-        $android_paths = preg_grep('/\.(java|xml)$/', $paths);
+        $android_paths = preg_grep('/\.(java|xml|gradle|properties)$/', $paths);
         $linters[] = id(new ArcanistTextLinter())->setPaths($android_paths)
                 ->setCustomSeverityMap(
                     array(
