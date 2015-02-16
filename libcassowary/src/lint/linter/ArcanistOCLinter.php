@@ -96,7 +96,7 @@ final class ArcanistOCLinter extends ArcanistLinter {
 
         foreach ($stdout as $line) {
             $matches = array();
-            if ($c = preg_match_all("/((?:\\/[\\w\\.\\-]+)+):(\\d+):(\\d+): (.*?) P(\\d+)((?:[a-zA-Z0-9 ]+))/is",
+            if ($c = preg_match_all("/((?:\\/[\\w\\.\\-]+)+):(\\d+):(\\d+): (.*?) P(\\d+)((?:[a-zA-Z0-9 ]+))?/is",
                 $line, $matches)) {
                 $message = new ArcanistLintMessage();
                 $message->setPath($path);
