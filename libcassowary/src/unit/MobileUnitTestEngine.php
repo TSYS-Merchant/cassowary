@@ -414,8 +414,7 @@ final class MobileUnitTestEngine extends ArcanistUnitTestEngine {
 		}
 		// Append an architecture flag, only where destination is not set
 		if (!in_array("-destination", $xctoolargs, false) && !in_array("-arch", $xctoolargs, false)) {
-			$xctoolargs.append("-arch");
-			$xctoolargs.append("i386");
+			array_push($xctoolargs, "-arch", "i386");
 		}
         return implode(" ", $xctoolargs);
 	}
