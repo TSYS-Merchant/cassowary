@@ -326,13 +326,16 @@ final class MobileUnitTestEngine extends ArcanistUnitTestEngine {
         // for all implementations
         $build_dir_output = array();
         $_ = 0;
+        $xctoolargs_params = $this->xcodebuild_args();
+        
         $cmd = "xcodebuild -showBuildSettings -configuration Debug"
-               . " -sdk iphonesimulator -arch i386 "
+               . $xctoolargs_params
                . " | grep OBJECT_FILE_DIR_normal -m1 | cut -d = -f2";
         exec($cmd, $build_dir_output, $_);
         if($_ != 0)
         {
             $cmd = "xcodebuild -showBuildSettings -configuration Debug"
+		            . $xctoolargs_params
                     ." | grep TARGET_TEMP_DIR -m1 | cut -d = -f2";
             $_ = 0;
             exec($cmd, $build_dir_output, $_);
@@ -399,6 +402,19 @@ final class MobileUnitTestEngine extends ArcanistUnitTestEngine {
         return $result_array;
     }
 
+	// Retrieve Args from the xctool-args file
+	private function xcodebuild_args() {
+		$xctoolargs_path = $this->projectRoot . "/.xctool-args";
+        $xctoolargs = json_decode(file_get_contents($xctoolargs_path));  
+        // Return Args as string, escaping the option values
+        for ($x = 0; $x <= sizeOf($xctoolargs); $x++) {
+    		if ($x % 2 == 1) {
+    			$xctoolargs[$x] = escapeshellarg($xctoolargs[$x]);
+    		}
+		} 
+        return implode(" ", $xctoolargs);
+	}
+	
     public function shouldEchoTestResults() {
         return !$this->androidOnly;
     }
