@@ -328,7 +328,7 @@ final class MobileUnitTestEngine extends ArcanistUnitTestEngine {
         $_ = 0;
         $xctoolargs_params = $this->xcodebuild_args();
         
-        $cmd = "xcodebuild -showBuildSettings -configuration Debug -arch i386 "
+        $cmd = "xcodebuild -showBuildSettings -configuration Debug "
                . $xctoolargs_params
                . " | grep OBJECT_FILE_DIR_normal -m1 | cut -d = -f2";
         exec($cmd, $build_dir_output, $_);
@@ -411,7 +411,12 @@ final class MobileUnitTestEngine extends ArcanistUnitTestEngine {
     		if ($x % 2 == 1) {
     			$xctoolargs[$x] = escapeshellarg($xctoolargs[$x]);
 			}
-		} 
+		}
+		// Append an architecture flag, only where destination is not set
+		if (!in_array("-destination", $xctoolargs, false) && !in_array("-arch", $xctoolargs, false)) {
+			$xctoolargs.append("-arch");
+			$xctoolargs.append("i386");
+		}
         return implode(" ", $xctoolargs);
 	}
 	
