@@ -326,7 +326,7 @@ final class MobileUnitTestEngine extends ArcanistUnitTestEngine {
         // for all implementations
         $build_dir_output = array();
         $_ = 0;
-        $xctoolargs_params = $this->xcodebuild_args();
+        $xctoolargs_params = $this->xcodebuildArgs();
 
         $cmd = 'xcodebuild -showBuildSettings -configuration Debug '
                .$xctoolargs_params
@@ -334,7 +334,7 @@ final class MobileUnitTestEngine extends ArcanistUnitTestEngine {
         exec($cmd, $build_dir_output, $_);
         if ($_ != 0) {
             $cmd = 'xcodebuild -showBuildSettings -configuration Debug '
-		            .$xctoolargs_params
+                    .$xctoolargs_params
                     .' | grep TARGET_TEMP_DIR -m1 | cut -d = -f2';
             $_ = 0;
             exec($cmd, $build_dir_output, $_);
@@ -401,23 +401,31 @@ final class MobileUnitTestEngine extends ArcanistUnitTestEngine {
         return $result_array;
     }
 
-	// Retrieve Args from the xctool-args file
-	private function xcodebuild_args() {
-		$xctoolargs_path = $this->projectRoot.'/.xctool-args';
-		$xctoolargs = json_decode(file_get_contents($xctoolargs_path));
+    // Retrieve Args from the xctool-args file
+    private function xcodebuildArgs() {
+        $xctoolargs_path = $this->projectRoot.'/.xctool-args';
+        $buildargs = [];
+        if (file_exists($xctoolargs_path)) {
+            $xctoolargs = json_decode(file_get_contents($xctoolargs_path));
+            array_merge($buildargs, xctoolargs);
+        } else {
+            array_push($buildargs, '-sdk', 'iphonesimulator');
+        }
         // Return Args as string, escaping the option values
-        for ($x = 0; $x <= sizeOf($xctoolargs); $x++) {
-    		if ($x % 2 == 1) {
-    			$xctoolargs[$x] = escapeshellarg($xctoolargs[$x]);
-			}
-		}
-		// Append an architecture flag, only where destination is not set
-		if (!in_array('-destination', $xctoolargs, false) && !in_array('-arch', $xctoolargs, false)) {
-			array_push($xctoolargs, '-arch', 'i386');
-		}
-        return implode(' ', $xctoolargs);
-	}
-	
+        for ($x = 0; $x <= sizeOf($buildargs); $x++) {
+            if ($x % 2 == 1) {
+                $buildargs[$x] = escapeshellarg($xctoolargs[$x]);
+            }
+        }
+        // Append required -arch flag where -destination or -arch is not set
+        $destination_not_in_args = !in_array('-destination', $buildargs, false);
+        $architecture_not_in_args = !in_array('-arch', $buildargs, false);
+        if ($destination_not_in_args && $architecture_not_in_args) {
+            array_push($buildargs, '-arch', 'i386');
+        }
+        return implode(' ', $buildargs);
+    }
+
     public function shouldEchoTestResults() {
         return !$this->androidOnly;
     }
