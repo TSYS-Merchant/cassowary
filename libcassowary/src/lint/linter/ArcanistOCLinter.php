@@ -2,7 +2,7 @@
 
 /*
 
-Copyright 2012-2014 iMobile3, LLC. All rights reserved.
+Copyright 2012-2015 iMobile3, LLC. All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
 modification, is permitted provided that adherence to the following
@@ -41,7 +41,7 @@ final class ArcanistOCLinter extends ArcanistLinter {
     }
 
     public function getLinterName() {
-        return 'OCLint';
+        return 'ObjectiveCLint';
     }
 
     public function getLintSeverityMap() {
@@ -96,7 +96,7 @@ final class ArcanistOCLinter extends ArcanistLinter {
 
         foreach ($stdout as $line) {
             $matches = array();
-            if ($c = preg_match_all("/((?:\\/[\\w\\.\\-]+)+):(\\d+):(\\d+): (.*?) P(\\d+)((?:[a-zA-Z0-9 ]+))/is",
+            if ($c = preg_match_all("/((?:\\/[\\w\\.\\-]+)+):(\\d+):(\\d+): (.*?) P(\\d+)((?:[a-zA-Z0-9 ]+))?/is",
                 $line, $matches)) {
                 $message = new ArcanistLintMessage();
                 $message->setPath($path);

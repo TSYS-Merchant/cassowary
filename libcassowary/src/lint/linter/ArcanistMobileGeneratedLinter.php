@@ -2,7 +2,7 @@
 
 /*
 
-Copyright 2012-2014 iMobile3, LLC. All rights reserved.
+Copyright 2012-2015 iMobile3, LLC. All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
 modification, is permitted provided that adherence to the following
@@ -41,7 +41,7 @@ final class ArcanistMobileGeneratedLinter extends ArcanistLinter {
     }
 
     public function getLinterName() {
-        return 'MOBILEGEN';
+        return 'MobileGeneratedLint';
     }
 
     public function getLintSeverityMap() {
