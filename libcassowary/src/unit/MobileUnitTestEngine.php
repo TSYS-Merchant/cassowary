@@ -406,15 +406,14 @@ final class MobileUnitTestEngine extends ArcanistUnitTestEngine {
         $xctoolargs_path = $this->projectRoot.'/.xctool-args';
         $buildargs = [];
         if (file_exists($xctoolargs_path)) {
-            $xctoolargs = json_decode(file_get_contents($xctoolargs_path));
-            array_merge($buildargs, xctoolargs);
+            $buildargs = json_decode(file_get_contents($xctoolargs_path));
         } else {
             array_push($buildargs, '-sdk', 'iphonesimulator');
         }
         // Return Args as string, escaping the option values
         for ($x = 0; $x <= sizeOf($buildargs); $x++) {
             if ($x % 2 == 1) {
-                $buildargs[$x] = escapeshellarg($xctoolargs[$x]);
+                $buildargs[$x] = escapeshellarg($buildargs[$x]);
             }
         }
         // Append required -arch flag where -destination or -arch is not set
