@@ -48,50 +48,50 @@ final class MobileUnitTestEngine extends ArcanistUnitTestEngine {
 
         // Looking for project root directory
         foreach ($this->getPaths() as $path) {
-            $root_path = $this->projectRoot . "/" . $path;
+            $root_path = $this->projectRoot.'/'.$path;
 
             // Checking all levels of path
             do {
                 // Project root should have .xctool-args
                 // Only add path once per project
-                if (file_exists($root_path . "/.xctool-args")
+                if (file_exists($root_path.'/.xctool-args')
                         && !in_array($root_path, $ios_test_paths)
                 ) {
                     array_push($ios_test_paths, $root_path);
                 }
 
                 // Stripping last level
-                $last = strrchr($root_path, "/");
-                $root_path = substr_replace($root_path, "",
+                $last = strrchr($root_path, '/');
+                $root_path = substr_replace($root_path, '',
                     strrpos($root_path, $last), strlen($last));
             } while ($last);
         }
 
         foreach ($this->getPaths() as $path) {
-            $root_path = $this->projectRoot . "/" . $path;
+            $root_path = $this->projectRoot.'/'.$path;
 
             // Checking all levels of path
             do {
                 // Project root should have AndroidManifest.xml
                 // We only want projects that have tests
                 // Only add path once per project
-                if (file_exists($root_path . "/AndroidManifest.xml")
-                        && file_exists($root_path . "/tests")
+                if (file_exists($root_path.'/AndroidManifest.xml')
+                        && file_exists($root_path.'/tests')
                         && !in_array($root_path, $android_test_paths)
                 ) {
                     array_push($android_test_paths, $root_path);
                 }
 
                 // Stripping last level
-                $last = strrchr($root_path, "/");
-                $root_path = substr_replace($root_path, "",
+                $last = strrchr($root_path, '/');
+                $root_path = substr_replace($root_path, '',
                     strrpos($root_path, $last), strlen($last));
             } while ($last);
         }
 
         // Checking to see if no paths were added
         if (count($ios_test_paths) == 0 && count($android_test_paths) == 0) {
-            throw new ArcanistNoEffectException("No tests to run.");
+            throw new ArcanistNoEffectException('No tests to run.');
         }
 
         if (count($ios_test_paths) == 0 && count($android_test_paths) > 0) {
@@ -104,9 +104,9 @@ final class MobileUnitTestEngine extends ArcanistUnitTestEngine {
 
             $result_location =
                     tempnam(sys_get_temp_dir(), 'arctestresults.phab');
-            exec(phutil_get_library_root("libcassowary") .
-            "/../../externals/xctool/xctool.sh -reporter phabricator:"
-            . $result_location . " test");
+            exec(phutil_get_library_root('libcassowary').
+            '/../../externals/xctool/xctool.sh -reporter phabricator:'
+            .$result_location.' test');
             $test_results =
                     json_decode(file_get_contents($result_location), true);
             unlink($result_location);
@@ -124,7 +124,7 @@ final class MobileUnitTestEngine extends ArcanistUnitTestEngine {
                 $properties = file('project.properties', FILE_SKIP_EMPTY_LINES);
                 foreach ($properties as $item) {
                     if (strpos($item, 'android.library.reference') !== false) {
-                        $library_path = substr($item, strpos($item, "=") + 1);
+                        $library_path = substr($item, strpos($item, '=') + 1);
                         $library_path = realpath(chop($library_path));
                         array_push($library_paths, $library_path);
                     }
@@ -139,25 +139,25 @@ final class MobileUnitTestEngine extends ArcanistUnitTestEngine {
 
                 // Building Main Package
                 chdir($path);
-                exec("android update project --path .");
+                exec('android update project --path .');
 
                 $output = array();
                 $result = 0;
-                exec("ant clean debug -d", $output, $result);
+                exec('ant clean debug -d', $output, $result);
 
                 if ($result != 0) {
                     print_r($output);
-                    throw new RuntimeException("Unable to build using [ant debug]");
+                    throw new RuntimeException('Unable to build using [ant debug]');
                 }
 
                 // Building Test Package
-                chdir($path . "/tests");
-                exec("android update test-project --path . -m ..");
-                exec("ant clean debug -d", $output, $result);
+                chdir($path.'/tests');
+                exec('android update test-project --path . -m ..');
+                exec('ant clean debug -d', $output, $result);
 
                 if ($result != 0) {
                     print_r($output);
-                    throw new RuntimeException("Unable to build using [ant debug]");
+                    throw new RuntimeException('Unable to build using [ant debug]');
                 }
             }
 
@@ -184,9 +184,9 @@ final class MobileUnitTestEngine extends ArcanistUnitTestEngine {
             // Installing packages
             foreach ($android_test_paths as $path) {
                 // Installing Main Package
-                chdir($path . "/bin");
+                chdir($path.'/bin');
                 list($result, $out) =
-                        exec_manual("adb -s %s install -r *-debug.apk",
+                        exec_manual('adb -s %s install -r *-debug.apk',
                             $device_id);
                 if ($result != 0) {
                     $msg = $out;
@@ -196,13 +196,13 @@ final class MobileUnitTestEngine extends ArcanistUnitTestEngine {
                         $msg = $matches[1];
                     }
                     throw new RuntimeException('Unable to install app APK: '
-                    . $msg);
+                    .$msg);
                 }
 
                 // Installing test package
-                chdir($path . "/tests/bin");
+                chdir($path.'/tests/bin');
                 list($result, $out) =
-                        exec_manual("adb -s %s install -r *-debug.apk",
+                        exec_manual('adb -s %s install -r *-debug.apk',
                             $device_id);
                 if ($result != 0) {
                     $msg = $out;
@@ -212,26 +212,26 @@ final class MobileUnitTestEngine extends ArcanistUnitTestEngine {
                         $msg = $matches[1];
                     }
                     throw new RuntimeException('Unable to install test APK: '
-                    . $msg);
+                    .$msg);
                 }
             }
 
             // Running tests after parsing test package name
             $descriptorspec = array(
-                0 => array("pipe", "r"),
-                1 => array("pipe", "w"),
-                2 => array("pipe", "w"));
+                0 => array('pipe', 'r'),
+                1 => array('pipe', 'w'),
+                2 => array('pipe', 'w'));
             $result_array = array();
             foreach ($android_test_paths as $path) {
-                chdir($path . "/tests");
+                chdir($path.'/tests');
 
                 $xml = simplexml_load_string(
-                    file_get_contents("AndroidManifest.xml"));
+                    file_get_contents('AndroidManifest.xml'));
 
                 $test_package = $xml->attributes()->package;
 
                 $test_command = "adb -s $device_id shell am instrument -r -w "
-                        . $test_package . "/android.test.InstrumentationTestRunner";
+                        .$test_package."/android.test.InstrumentationTestRunner";
 
                 $pipes = null;
                 $process = proc_open($test_command, $descriptorspec, $pipes,
@@ -277,8 +277,8 @@ final class MobileUnitTestEngine extends ArcanistUnitTestEngine {
                             $test_class = '';
                             $test_name = '';
                         } else if ($status == 1) {
-                            echo '(' . $test_number . '/' . $test_total . ') ' .
-                                    $test_name . ' in ' . $test_class . '...';
+                            echo '('.$test_number.'/'.$test_total.') '.
+                                    $test_name.' in '.$test_class.'...';
                         }
                     } else if ($matches[1] == 'STATUS') {
                         $fields = explode('=', $matches[2]);
@@ -298,7 +298,7 @@ final class MobileUnitTestEngine extends ArcanistUnitTestEngine {
                         if (count($fields) == 2) {
                             if ($fields[0] == 'longMsg') {
                                 echo "\033[41m\033[1m FAIL \033[0m\033[0m: "
-                                        . $fields[1] . "\n";
+                                        .$fields[1]."\n";
 
                                 $result = new ArcanistUnitTestResult();
                                 $result
@@ -326,38 +326,40 @@ final class MobileUnitTestEngine extends ArcanistUnitTestEngine {
         // for all implementations
         $build_dir_output = array();
         $_ = 0;
-        $cmd = "xcodebuild -showBuildSettings -configuration Debug"
-               . " -sdk iphonesimulator -arch i386 "
-               . " | grep OBJECT_FILE_DIR_normal -m1 | cut -d = -f2";
+        $xctoolargs_params = $this->xcodebuildArgs();
+
+        $cmd = 'xcodebuild -showBuildSettings -configuration Debug '
+               .$xctoolargs_params
+               .' | grep OBJECT_FILE_DIR_normal -m1 | cut -d = -f2';
         exec($cmd, $build_dir_output, $_);
-        if($_ != 0)
-        {
-            $cmd = "xcodebuild -showBuildSettings -configuration Debug"
-                    ." | grep TARGET_TEMP_DIR -m1 | cut -d = -f2";
+        if ($_ != 0) {
+            $cmd = 'xcodebuild -showBuildSettings -configuration Debug '
+                    .$xctoolargs_params
+                    .' | grep TARGET_TEMP_DIR -m1 | cut -d = -f2';
             $_ = 0;
             exec($cmd, $build_dir_output, $_);
-            $build_dir_output[0] .= "/Objects-normal";
+            $build_dir_output[0] .= '/Objects-normal';
         }
 
         $build_dir_output[0] = trim($build_dir_output[0]);
-        if(file_exists($build_dir_output[0] . "/x86_64")) {
-            $build_dir_output[0] .= "/x86_64/";
+        if (file_exists($build_dir_output[0].'/x86_64')) {
+            $build_dir_output[0] .= '/x86_64/';
         } else {
-            $build_dir_output[0] .= "/i386/";
+            $build_dir_output[0] .= '/i386/';
         }
 
-        if(chdir($build_dir_output[0]) == false) {
+        if (chdir($build_dir_output[0]) == false) {
             die("Directory ".$build_dir_output[0]." does not exist!\n");
         }
-        exec("gcov * > /dev/null 2> /dev/null");
+        exec('gcov * > /dev/null 2> /dev/null');
 
         $coverage = array();
-        foreach (glob("*.m.gcov") as $gcov_filename) {
+        foreach (glob('*.m.gcov') as $gcov_filename) {
             $str = '';
 
             foreach (file($gcov_filename) as $gcov_line) {
                 $gcov_matches = array();
-                if ($g = preg_match_all("/.*?(.):.*?(\\d+)/is", $gcov_line,
+                if ($g = preg_match_all('/.*?(.):.*?(\\d+)/is', $gcov_line,
                             $gcov_matches)
                         && $gcov_matches[2][0] > 0
                 ) {
@@ -376,7 +378,7 @@ final class MobileUnitTestEngine extends ArcanistUnitTestEngine {
             }
 
             foreach ($this->getPaths() as $path) {
-                if (strpos($path, str_replace(".gcov", "", $gcov_filename))
+                if (strpos($path, str_replace('.gcov', '', $gcov_filename))
                         !== false
                 ) {
                     $coverage[$path] = $str;
@@ -397,6 +399,30 @@ final class MobileUnitTestEngine extends ArcanistUnitTestEngine {
         }
 
         return $result_array;
+    }
+
+    // Retrieve Args from the xctool-args file
+    private function xcodebuildArgs() {
+        $xctoolargs_path = $this->projectRoot.'/.xctool-args';
+        $buildargs = [];
+        if (file_exists($xctoolargs_path)) {
+            $buildargs = json_decode(file_get_contents($xctoolargs_path));
+        } else {
+            array_push($buildargs, '-sdk', 'iphonesimulator');
+        }
+        // Return Args as string, escaping the option values
+        for ($x = 0; $x <= sizeOf($buildargs); $x++) {
+            if ($x % 2 == 1) {
+                $buildargs[$x] = escapeshellarg($buildargs[$x]);
+            }
+        }
+        // Append required -arch flag where -destination or -arch is not set
+        $destination_not_in_args = !in_array('-destination', $buildargs, false);
+        $architecture_not_in_args = !in_array('-arch', $buildargs, false);
+        if ($destination_not_in_args && $architecture_not_in_args) {
+            array_push($buildargs, '-arch', 'i386');
+        }
+        return implode(' ', $buildargs);
     }
 
     public function shouldEchoTestResults() {
