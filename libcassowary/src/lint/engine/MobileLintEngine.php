@@ -78,6 +78,10 @@ final class MobileLintEngine extends ArcanistLintEngine {
         $linters[] =
                 id(new ArcanistOCLinter())->setPaths($ios_implementation_paths);
 
+        $ios_project_paths = preg_grep('/\.pbxproj$/', $paths);
+        $linters[] =
+                id(new ArcanistOCProjectLinter())->setPaths($ios_project_paths);
+
         // locate project directories and run static analysis
         if (count($ios_implementation_paths) > 0) {
             $analysis_paths = array();

@@ -1,0 +1,13 @@
+~~~~~~~~~~
+error:345:1
+error:348:1
+error:351:1
+error:358:1
+error:361:1
+error:364:1
+~~~~~~~~~~
+~~~~~~~~~~
+{
+  "hook" : true,
+  "path" : "/opt/cassowary/libcassowary/src/lint/linter/__tests__/objc/projects/BadProject.pbxproj"
+}
