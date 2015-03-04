@@ -1,7 +1,7 @@
 <?php
 
 /*
-Copyright 2012-2014 iMobile3, LLC. All rights reserved.
+Copyright 2012-2015 iMobile3, LLC. All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
 modification, is permitted provided that adherence to the following
@@ -104,8 +104,7 @@ final class MobileUnitTestEngine extends ArcanistUnitTestEngine {
 
             $result_location =
                     tempnam(sys_get_temp_dir(), 'arctestresults.phab');
-            exec(phutil_get_library_root('libcassowary').
-            '/../../externals/xctool/xctool.sh -reporter phabricator:'
+            exec('xctool -reporter phabricator:'
             .$result_location.' test');
             $test_results =
                     json_decode(file_get_contents($result_location), true);

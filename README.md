@@ -51,7 +51,11 @@ It may be necessary to edit this script based on your project needs and structur
 
 The iOS linter looks for this file and uses it as a reference point for linting individual files so make sure it exists otherwise no linting will occur.
 
-iOS unit testing leverages the OCUnit testing framework provided within Xcode and is built and executed using [xctool][5]. The unit test engine expects to find a file named `.xctool-args` that exists parallel to an Xcode project. All unit tests per that configuration will be executed; see the xctool documentation for how to configure its execution using this file.
+iOS unit testing leverages the OCUnit testing framework provided within Xcode and is built and executed using [xctool][5]. The unit test engine expects to find a file named `.xctool-args` that exists parallel to an Xcode project. All unit tests per that configuration will be executed; see the `xctool` documentation for how to configure its execution using this file. To install `xctool` just run:
+
+```bash
+brew install xctool
+```
 
 Android Linting and Unit Testing
 --------------------------------

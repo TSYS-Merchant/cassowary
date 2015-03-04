@@ -1,3 +1,0 @@
-[submodule "externals/xctool"]
-	path = externals/xctool
-	url = git://github.com/facebook/xctool.git
