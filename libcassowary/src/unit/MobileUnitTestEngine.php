@@ -112,7 +112,9 @@ final class MobileUnitTestEngine extends ArcanistUnitTestEngine {
 
             $test_result = $this->parseiOSOutput($test_results);
 
-            $result_array = array_merge($result_array, $test_result);
+            if ($test_result) {
+                $result_array = array_merge($result_array, $test_result);
+            }
         }
 
         if (count($android_test_paths) > 0) {
@@ -325,14 +327,23 @@ final class MobileUnitTestEngine extends ArcanistUnitTestEngine {
         // for all implementations
         $build_dir_output = array();
         $_ = 0;
-        $xctoolargs_params = $this->xcodebuildArgs();
+        $xctoolargs_params = $this->getXcodebuildArgs();
 
-        $cmd = 'xcodebuild -showBuildSettings -configuration Debug '
+        $targets = array();
+
+        $cmd = 'xcodebuild -list | grep TestsHost -m1 ';
+        exec($cmd, $targets, $_);
+
+        if ($_ == 0) {
+            $xctoolargs_params .= ' -target '.trim($targets[0]);
+        }
+
+        $cmd = 'xcodebuild -showBuildSettings '
                .$xctoolargs_params
                .' | grep OBJECT_FILE_DIR_normal -m1 | cut -d = -f2';
         exec($cmd, $build_dir_output, $_);
         if ($_ != 0) {
-            $cmd = 'xcodebuild -showBuildSettings -configuration Debug '
+            $cmd = 'xcodebuild -showBuildSettings '
                     .$xctoolargs_params
                     .' | grep TARGET_TEMP_DIR -m1 | cut -d = -f2';
             $_ = 0;
@@ -348,7 +359,7 @@ final class MobileUnitTestEngine extends ArcanistUnitTestEngine {
         }
 
         if (chdir($build_dir_output[0]) == false) {
-            die("Directory ".$build_dir_output[0]." does not exist!\n");
+            return;
         }
         exec('gcov * > /dev/null 2> /dev/null');
 
@@ -401,18 +412,33 @@ final class MobileUnitTestEngine extends ArcanistUnitTestEngine {
     }
 
     // Retrieve Args from the xctool-args file
-    private function xcodebuildArgs() {
-        $xctoolargs_path = $this->projectRoot.'/.xctool-args';
+    private function getXcodebuildArgs() {
+        $xctoolargs_path = getcwd().'/.xctool-args';
         $buildargs = [];
         if (file_exists($xctoolargs_path)) {
             $buildargs = json_decode(file_get_contents($xctoolargs_path));
         } else {
             array_push($buildargs, '-sdk', 'iphonesimulator');
         }
+
         // Return Args as string, escaping the option values
-        for ($x = 0; $x <= sizeOf($buildargs); $x++) {
-            if ($x % 2 == 1) {
-                $buildargs[$x] = escapeshellarg($buildargs[$x]);
+        for ($x = 0; $x < sizeOf($buildargs); $x++) {
+            if ($x % 2 == 0) {
+                // Code coverage relies on the main target, not the unit tests
+                // so we must filter out anything that directs xcodebuild to
+                // the unit tests, otherwise we only get code coverage of the
+                // unit tests themselves.
+                if ($buildargs[$x] == '-find-target' ||
+                    $buildargs[$x] == '-target' ||
+                    $buildargs[$x] == '-scheme' ||
+                    $buildargs[$x] == '-project') {
+                    $buildargs[$x] = '';
+                    $buildargs[$x + 1] = '';
+                }
+            } else {
+                if ($buildargs[$x] != '') {
+                    $buildargs[$x] = escapeshellarg($buildargs[$x]);
+                }
             }
         }
         // Append required -arch flag where -destination or -arch is not set
