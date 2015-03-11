@@ -66,13 +66,19 @@ final class MobileLintEngine extends ArcanistLintEngine {
         $linters[] = id(new ArcanistNoLintLinter())->setPaths($text_paths);
         $linters[] = id(new ArcanistSpellingLinter())->setPaths($text_paths);
 
+		$lintEngineName = 'MobileLintEngine';
+        $lintSettings =  $this->buildLintSettings($lintEngineName);
+		$lintSetting_textMaxLength = $lintSettings['text.max-line-length'];
+		$lintSetting_textMaxLengthLong = $lintSettings['text.max-line-length.long'];
+		
         $ios_text_paths = preg_grep('/\.(h|m|sh|pch)$/', $paths);
+
         $linters[] = id(new ArcanistTextLinter())->setPaths($ios_text_paths)
                 ->setCustomSeverityMap(
                     array(
                         ArcanistTextLinter::LINT_LINE_WRAP =>
                         ArcanistLintSeverity::SEVERITY_ADVICE
-                    ))->setMaxLineLength(120);
+                    ))->setMaxLineLength($lintSetting_textMaxLength);
 
         $ios_implementation_paths = preg_grep('/\.m$/', $paths);
         $linters[] =
@@ -121,12 +127,13 @@ final class MobileLintEngine extends ArcanistLintEngine {
         }
 
         $android_paths = preg_grep('/\.(java|xml|gradle|properties)$/', $paths);
+        
         $linters[] = id(new ArcanistTextLinter())->setPaths($android_paths)
                 ->setCustomSeverityMap(
                     array(
                         ArcanistTextLinter::LINT_LINE_WRAP =>
                         ArcanistLintSeverity::SEVERITY_ADVICE
-                    ))->setMaxLineLength(120);
+                    ))->setMaxLineLength($lintSetting_textMaxLength);
 
         // locate project directories and run static analysis
         if (count($android_paths) > 0) {
@@ -200,7 +207,7 @@ final class MobileLintEngine extends ArcanistLintEngine {
                         ArcanistLintSeverity::SEVERITY_DISABLED,
                         ArcanistTextLinter::LINT_LINE_WRAP =>
                         ArcanistLintSeverity::SEVERITY_ADVICE
-                    ))->setMaxLineLength(250);
+                    ))->setMaxLineLength($lintSetting_textMaxLengthLong);
 
         $web_paths = preg_grep('/\.(php|css|js)$/', $paths);
         $linters[] = id(new ArcanistTextLinter())->setPaths($web_paths)
@@ -212,7 +219,7 @@ final class MobileLintEngine extends ArcanistLintEngine {
                         ArcanistLintSeverity::SEVERITY_DISABLED,
                         ArcanistTextLinter::LINT_LINE_WRAP =>
                         ArcanistLintSeverity::SEVERITY_ADVICE
-                    ))->setMaxLineLength(120);
+                    ))->setMaxLineLength($lintSetting_textMaxLength);
 
         $linters[] =
                 id(new ArcanistReSharperLinter())->setPaths($dotnet_paths);
@@ -241,4 +248,44 @@ final class MobileLintEngine extends ArcanistLintEngine {
 
         return $linters;
     }
+    
+    function buildLintSettings($lintEngineName) {
+	   	$projectRoot = $this->getWorkingCopy()->getProjectRoot();
+	    $arclint_path = $projectRoot . "/.arclint";
+	    $arclint_lintersKey = 'linters';
+	    $arclint_textLinter_maxLineLengthKey = 'text.max-line-length';
+	    $lintEngine_defaults = array( 'type' => $lintEngineName, $arclint_textLinter_maxLineLengthKey => 120, $arclint_textLinter_maxLineLengthKey . '.long' => 250);
+	    
+	    // Write MobileLintEngine .arclint settings if none yet exist
+	    if (!file_exists($arclint_path)) {
+	    	$linters = (object) array($arclint_lintersKey => array($lintEngineName => $lintEngine_defaults));
+	    	$this->writeLintSettings($linters, $arclint_path);
+	    }
+	    
+		// Decode .arclint settings
+		$arclint = json_decode(file_get_contents($arclint_path), true);
+
+	    // Check .arclint settings include MobileLintEngine settings
+	    $arclinters = $arclint[$arclint_lintersKey];
+		if (array_key_exists($lintEngineName, $arclinters) == false ) {
+			// Honour an existing text.max-line-length rule
+			if (array_key_exists('text', $arclinters) == true && array_key_exists($arclint_textLinter_maxLineLengthKey, $arclinters['text']) == true) {
+			 	$maxLineLength = $arclinters['text'][$arclint_textLinter_maxLineLengthKey];
+				$lintEngine_defaults[$arclint_textLinter_maxLineLengthKey] = $maxLineLength;
+			}
+			// Add the MobileLintEngine settings
+			$arclint[$arclint_lintersKey][$lintEngineName] = $lintEngine_defaults;
+			$arclinters = $arclint[$arclint_lintersKey];
+	    	$this->writeLintSettings($arclint, $arclint_path);
+		}
+		
+		// Return the linter settings for the given lint engine name
+		return $arclinters[$lintEngineName];
+	}
+	
+	function writeLintSettings($settings, $path) {
+		$fp = fopen($path, 'w');
+		fwrite($fp, json_encode($settings, JSON_PRETTY_PRINT));
+		fclose($fp);
+	}
 }
