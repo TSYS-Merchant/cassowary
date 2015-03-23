@@ -83,13 +83,19 @@ final class ArcanistAndroidLinter extends ArcanistLinter {
         $output_paths = array();
         foreach ($this->gradleModules as $module) {
             $lint_command .= ':'.$module.':lint ';
-            $output_paths[] = $path.'/'.$module.'/build/outputs/lint-results.xml';
+            $output_path = $path.'/'.$module.'/build/outputs/lint-results.xml';
+            if (file_exists($output_path)) {
+                unlink($output_path);
+            }
+            $output_paths[] = $output_path;
         }
-        list($err) = exec_manual($gradle_bin.' '.$lint_command);
+        exec_manual($gradle_bin.' '.$lint_command);
         chdir($cwd);
 
-        if ($err) {
-            throw new ArcanistUsageException("Error executing gradle command");
+        foreach ($output_paths as $output_path) {
+            if (!file_exists($output_path)) {
+                throw new ArcanistUsageException('Error executing gradle command');
+            }
         }
 
         return $output_paths;

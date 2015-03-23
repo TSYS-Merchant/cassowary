@@ -5,7 +5,7 @@ final class ArcanistAndroidLinterTestCase extends ArcanistLinterTestCase {
     /**
      * Tests the custom Android linters
      */
-    public function testAndroidLinter() {
+    public function testLinter() {
         $linter = new ArcanistAndroidLinter(null);
         $working_copy = ArcanistWorkingCopyIdentity::newFromPath(__FILE__);
         $this->executeTestsInDirectory(
