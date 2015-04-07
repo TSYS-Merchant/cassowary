@@ -185,8 +185,9 @@ final class MobileLintEngine extends ArcanistLintEngine {
                     }
 
                     foreach ($gradle_module_paths as $module_path) {
-                        if (!in_array($module_path, $gradle_path_map[$gradle_path])) {
-                            $gradle_path_map[$gradle_path][] = trim(str_replace('/', ':', str_replace($gradle_path, '', $module_path)), ':');
+                        $module_name = trim(str_replace('/', ':', str_replace($gradle_path, '', $module_path)), ':');
+                        if (!in_array($module_name, $gradle_path_map[$gradle_path])) {
+                            $gradle_path_map[$gradle_path][] = $module_name;
                         }
                     }
                 }
