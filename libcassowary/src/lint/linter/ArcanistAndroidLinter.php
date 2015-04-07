@@ -83,7 +83,7 @@ final class ArcanistAndroidLinter extends ArcanistLinter {
         $output_paths = array();
         foreach ($this->gradleModules as $module) {
             $lint_command .= ':'.$module.':lint ';
-            $output_path = $path.'/'.$module.'/build/outputs/lint-results.xml';
+            $output_path = $path.'/'.str_replace(':', '/', $module).'/build/outputs/lint-results.xml';
             if (file_exists($output_path)) {
                 unlink($output_path);
             }

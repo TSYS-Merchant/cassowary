@@ -142,14 +142,14 @@ final class MobileLintEngine extends ArcanistLintEngine {
         // locate project directories and run static analysis
         if (count($android_paths) > 0) {
             $eclipse_paths = array();
-            $gradle_path_modules = array();
+            $gradle_path_map = array();
 
             foreach ($android_paths as $key => $path) {
                 $path_on_disk = $this->getFilePathOnDisk($path);
                 $current_directory = dirname($path_on_disk);
                 $eclipse_path = null;
                 $gradle_path = null;
-                $gradle_modules = array();
+                $gradle_module_paths = array();
 
                 do {
                     if ($current_directory === '/'
@@ -166,7 +166,7 @@ final class MobileLintEngine extends ArcanistLintEngine {
                         $gradle_path = $current_directory;
                     } else if (file_exists($current_directory.'/build.gradle')) {
                         // Gradle module root
-                        $gradle_modules[] = basename($current_directory);
+                        $gradle_module_paths[] = $current_directory;
                     }
 
                     $current_directory = dirname($current_directory);
@@ -180,13 +180,13 @@ final class MobileLintEngine extends ArcanistLintEngine {
                 }
 
                 if ($gradle_path != null) {
-                    if (!isset($gradle_path_modules[$gradle_path])) {
-                        $gradle_path_modules[$gradle_path] = array();
+                    if (!isset($gradle_path_map[$gradle_path])) {
+                        $gradle_path_map[$gradle_path] = array();
                     }
 
-                    foreach ($gradle_modules as $module) {
-                        if (!in_array($module, $gradle_path_modules[$gradle_path])) {
-                            $gradle_path_modules[$gradle_path][] = $module;
+                    foreach ($gradle_module_paths as $module_path) {
+                        if (!in_array($module_path, $gradle_path_map[$gradle_path])) {
+                            $gradle_path_map[$gradle_path][] = trim(str_replace('/', ':', str_replace($gradle_path, '', $module_path)), ':');
                         }
                     }
                 }
@@ -195,7 +195,7 @@ final class MobileLintEngine extends ArcanistLintEngine {
             $linters[] = id(new ArcanistAndroidLinter(null))
                     ->setPaths($eclipse_paths);
 
-            foreach ($gradle_path_modules as $path => $modules) {
+            foreach ($gradle_path_map as $path => $modules) {
                 $linters[] = id(new ArcanistAndroidLinter($modules))
                         ->setPaths(array($path));
             }
