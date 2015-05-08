@@ -61,7 +61,7 @@ final class ArcanistOCStaticAnalysisLinter extends ArcanistLinter {
         $stdout = array();
         $_ = 0;
         exec(phutil_get_library_root("libcassowary") .
-        "/../../externals/xctool/xctool.sh -reporter json-stream clean build RUN_CLANG_STATIC_ANALYZER=YES",
+        'xctool -reporter json-stream clean build RUN_CLANG_STATIC_ANALYZER=YES',
             $stdout, $_);
         foreach ($stdout as $line) {
             $resultItem = json_decode($line, true);
