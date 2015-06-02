@@ -430,7 +430,6 @@ final class MobileUnitTestEngine extends ArcanistUnitTestEngine {
                 // unit tests themselves.
                 if ($buildargs[$x] == '-find-target' ||
                     $buildargs[$x] == '-target' ||
-                    $buildargs[$x] == '-scheme' ||
                     $buildargs[$x] == '-project') {
                     $buildargs[$x] = '';
                     $buildargs[$x + 1] = '';
