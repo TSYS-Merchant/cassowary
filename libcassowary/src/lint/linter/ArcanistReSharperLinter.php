@@ -84,7 +84,7 @@ final class ArcanistReSharperLinter extends ArcanistLinter {
             $lint_output = tempnam(sys_get_temp_dir(), 'arclint.xml');
             $path_on_disk = $this->getEngine()->getFilePathOnDisk($path);
 
-            execx('inspectcode %s /o=%s', $path_on_disk, $lint_output);
+            execx('inspectcode /o=%s /no-swea %s', $lint_output, $path_on_disk);
 
             $filexml = simplexml_load_string(file_get_contents($lint_output));
             if (empty($filexml)) {
@@ -92,10 +92,10 @@ final class ArcanistReSharperLinter extends ArcanistLinter {
                 . "output version. Please update to the latest version.");
             }
 
-            if ($filexml->attributes()->ToolsVersion < 8.1) {
+            if ($filexml->attributes()->ToolsVersion < 103.0) {
                 throw new ArcanistUsageException("Unsupported Command Line Tools "
                 . "output version. Please update to the latest version.");
-            } else if ($filexml->attributes()->ToolsVersion > 8.1) {
+            } else if ($filexml->attributes()->ToolsVersion > 103.0) {
                 throw new ArcanistUsageException("Unsupported Command Line Tools "
                 . "output version. Cassowary needs an update to match.");
             }
@@ -170,8 +170,10 @@ final class ArcanistReSharperLinter extends ArcanistLinter {
     public function lintPath($path) {
         $path_on_disk = $this->getEngine()->getFilePathOnDisk($path);
 
-        foreach ($this->allLintResults[$path_on_disk] as $key => $message) {
-            $this->addLintMessage($message);
+        if (array_key_exists($path_on_disk, $this->allLintResults)) {
+            foreach ($this->allLintResults[$path_on_disk] as $key => $message) {
+                $this->addLintMessage($message);
+            }
         }
     }
 }
