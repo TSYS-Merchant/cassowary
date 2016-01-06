@@ -2,7 +2,7 @@
 
 /*
 
-Copyright 2012-2015 iMobile3, LLC. All rights reserved.
+Copyright 2012-2016 iMobile3, LLC. All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
 modification, is permitted provided that adherence to the following
@@ -55,7 +55,6 @@ final class ArcanistOCProjectLinter extends ArcanistLinter {
     public function lintPath($path) {
         $this->checkPathForCodeSigning($path);
         $this->checkPathForDeploymentTarget($path);
-        $this->checkPathForValidArchitectures($path);
     }
 
     public function checkPathForCodeSigning($path) {
@@ -116,40 +115,6 @@ final class ArcanistOCProjectLinter extends ArcanistLinter {
 
                     $message->setName('Deployment Target Too Low');
                     $message->setDescription('Deployment target must be a minimum of 7.0 or the app will be rejected by Apple.');
-
-                    $this->addLintMessage($message);
-                }
-            }
-        }
-    }
-
-    public function checkPathForValidArchitectures($path) {
-        $path_on_disk = $this->getEngine()->getFilePathOnDisk($path);
-
-        try {
-            $stdout = array();
-            $_ = 0;
-            exec("grep -n -b \"_*ARCHS\" $path_on_disk", $stdout, $_);
-            } catch (CommandException $e) {
-            $stdout = $e->getStdout();
-        }
-
-        foreach ($stdout as $line) {
-            $matches = array();
-            if ($c = preg_match_all('/(\d*):(\d*):(.*)/i',
-                $line, $matches)) {
-
-                $components = explode(' = ', $matches[3][0]);
-                if (substr_count($components[1], 'arm64') <= 0) {
-                    $message = new ArcanistLintMessage();
-                    $message->setPath($path);
-                    $message->setLine($matches[1][0]);
-                    $message->setChar($matches[2][0]);
-                    $message->setCode('App Store');
-                    $message->setSeverity(ArcanistLintSeverity::SEVERITY_ERROR);
-
-                    $message->setName('ARM64 Support Required');
-                    $message->setDescription('Default architecture settings have been overridden without arm64 support. This app will be rejected by Apple.');
 
                     $this->addLintMessage($message);
                 }
