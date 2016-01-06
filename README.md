@@ -35,7 +35,7 @@ iOS Linting and Unit Testing
 #! /bin/bash
 
 ARCH=armv7
-SYSROOT=/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS7.0.sdk
+SYSROOT=/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk
 PCH_PATH=src/Prefix.pch
 
 INCLUDES=''
@@ -44,7 +44,7 @@ do
   INCLUDES="$INCLUDES -I$folder"
 done
 
-oclint -rc NUMBER_OF_PARAMETERS=10 -rc METHOD_LENGTH=180 $1 -- -x objective-c -arch $ARCH -F . -isysroot $SYSROOT -g -I$INCLUDES -include $PCH_PATH -c
+oclint $1 -- -x objective-c -arch $ARCH -F . -isysroot $SYSROOT -g -I$INCLUDES -include $PCH_PATH -c
 ```
 
 It may be necessary to edit this script based on your project needs and structure. See the [command line documentation][4] for more info.

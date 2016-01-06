@@ -1,9 +1,0 @@
-~~~~~~~~~~
-warning:16:1
-warning:63:1
-~~~~~~~~~~
-~~~~~~~~~~
-{
-  "hook" : true,
-  "path" : "/opt/cassowary/libcassowary/src/lint/linter/__tests__/objc/classes/CyclomaticComplexity.m"
-}
