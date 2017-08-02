@@ -1,6 +1,6 @@
 {
   "project_id" : "Cassowary",
-  "conduit_uri" : "https://devportal.imobile3.com/",
+  "conduit_uri" : "https://phab.imobile3.local/",
   "lint.engine" : "ArcanistComprehensiveLintEngine",
   "unit.engine" : "PhutilUnitTestEngine",
   "load" : [
