@@ -45,6 +45,7 @@ final class MobileUnitTestEngine extends ArcanistUnitTestEngine {
         $result_array = array();
         $ios_test_paths = array();
         $android_test_paths = array();
+        $dotnet_test_paths = array();
 
         // Looking for project root directory
         foreach ($this->getPaths() as $path) {
@@ -89,8 +90,30 @@ final class MobileUnitTestEngine extends ArcanistUnitTestEngine {
             } while ($last);
         }
 
+        // .NET
+        foreach ($this->getPaths() as $path) {
+            $root_path = $this->projectRoot.'/'.$path;
+
+            // Checking all levels of path
+            do {
+                // Project root should have .xunit-args
+                // Only add path once per project
+                if (file_exists($root_path.'/xunit.ini')
+                        && !in_array($root_path, $dotnet_test_paths)
+                ) {
+                    array_push($dotnet_test_paths, $root_path);
+                }
+
+                // Stripping last level
+                $last = strrchr($root_path, '/');
+                $root_path = substr_replace($root_path, '',
+                    strrpos($root_path, $last), strlen($last));
+            } while ($last);
+        }
+
         // Checking to see if no paths were added
-        if (count($ios_test_paths) == 0 && count($android_test_paths) == 0) {
+        if (count($ios_test_paths) == 0 && count($android_test_paths) == 0
+                && count($dotnet_test_paths) == 0) {
             throw new ArcanistNoEffectException('No tests to run.');
         }
 
@@ -115,6 +138,40 @@ final class MobileUnitTestEngine extends ArcanistUnitTestEngine {
             if ($test_result) {
                 $result_array = array_merge($result_array, $test_result);
             }
+        }
+
+        // .NET
+        foreach ($dotnet_test_paths as $path) {
+            chdir($path);
+
+            $result_location =
+                    tempnam(sys_get_temp_dir(), 'arctestresults.phab');
+
+            // Get config file
+            $config_file = parse_ini_file("xunit.ini", true);
+            $sln = $config_file["msbuild"]["solution_path"];
+            $runner = $config_file["unit_tests"]["xunit_runner_path"];
+            $testproject = $config_file["unit_tests"]["test_project_dll"];
+            $traits = $config_file["unit_tests"]["xunit_traits"];
+
+            // Try to build. If msbuild isn't in the path it will fail silently
+            // and run tests against the last compiled version
+            $build_output = shell_exec("msbuild " . $sln .
+                    " /verbosity:minimal");
+
+            //run unit tests
+            shell_exec($runner . ' ' . $testproject . ' ' . $traits .
+                    ' -json -nologo > ' . $result_location );
+            $test_results =
+                    file($result_location);
+
+            unlink($result_location);
+
+            $test_result = $this->parseDOTNetOutput($test_results);
+
+             if ($test_result) {
+                  $result_array = array_merge($result_array, $test_result);
+             }
         }
 
         if (count($android_test_paths) > 0) {
@@ -406,6 +463,36 @@ final class MobileUnitTestEngine extends ArcanistUnitTestEngine {
             $result->setLink($test_result_item['link']);
             $result->setCoverage($coverage);
             array_push($result_array, $result);
+        }
+
+        return $result_array;
+    }
+
+    private function parseDOTNetOutput($test_results) {
+        $result = null;
+        $result_array = array();
+
+        // Iterate through test results and locate passes / failures
+        foreach ($test_results as $key => $test_result_item) {
+          // Remove special characters from xunit
+          // failures that blow up json parsing
+          $test_result_item = preg_replace('/[\x00-\x1F\x7F]/',
+                  '', $test_result_item);
+          //convert to utf8 then deserialize
+          $message = json_decode( utf8_encode($test_result_item), true);
+
+          // Xunit passing results have 0 valuable information
+          // and all we really care about are failures
+          if($message['message'] == 'testFailed')
+          {
+            $result = new ArcanistUnitTestResult();
+            $result->setResult(ArcanistUnitTestResult::RESULT_FAIL);
+            $result->setName($message['testName']);
+            $result->setUserData($message['errorMessages']);
+            $result->setExtraData(array("stacktraces",
+                    $message['stackTraces']));
+            array_push($result_array, $result);
+          }
         }
 
         return $result_array;
