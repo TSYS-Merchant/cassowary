@@ -144,27 +144,29 @@ final class MobileUnitTestEngine extends ArcanistUnitTestEngine {
         foreach ($dotnet_test_paths as $path) {
             chdir($path);
 
-            $result_location =
-                tempnam(sys_get_temp_dir(), 'arctestresults.phab');
-
             // Get config file
             $config_file =
                 json_decode(file_get_contents('.xunit-args'), true);
             $runner = $config_file['xunit_runner_path'];
-            $testproject = $config_file['test_project_dll'];
+            $test_projects = $config_file['test_project_paths'];
             $traits = $config_file['xunit_traits'];
 
-            // run unit tests
-            shell_exec($runner.' '.$testproject.' '.$traits.
+            // run unit tests, by project
+            foreach ($test_projects as $test_project) {
+                $result_location =
+                tempnam(sys_get_temp_dir(), 'arctestresults.phab');
+
+                shell_exec($runner.' '.$test_project.' '.$traits.
                 ' -quiet -xml '.$result_location);
-            $test_results = file_get_contents($result_location);
+                $test_results = file_get_contents($result_location);
 
-            unlink($result_location);
+                unlink($result_location);
 
-            $test_result = $this->parseDotNetOutput($test_results);
+                $test_result = $this->parseDotNetOutput($test_results);
 
-            if ($test_result) {
-                $result_array = array_merge($result_array, $test_result);
+                if ($test_result) {
+                    $result_array = array_merge($result_array, $test_result);
+                }
             }
         }
 
@@ -474,8 +476,15 @@ final class MobileUnitTestEngine extends ArcanistUnitTestEngine {
         foreach ($xunit_result_array as $key => $xunit_result) {
             $result = new ArcanistUnitTestResult();
             $result->setResult(ArcanistUnitTestResult::RESULT_PASS);
-            $result->setName((string)$xunit_result['name']);
-            $result->setDuration((float)$xunit_result['time']);
+
+           $result_name = (string)$xunit_result['name'];
+           if (strlen($result_name) > 200) {
+               $result_name = substr($result_name, 0, 200);
+           }
+
+           $result->setName($result_name);
+
+           $result->setDuration((float)$xunit_result['time']);
 
             if ($xunit_result['result'] == 'Fail') {
                 $result->setResult(ArcanistUnitTestResult::RESULT_FAIL);
