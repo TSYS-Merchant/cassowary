@@ -148,20 +148,20 @@ final class MobileUnitTestEngine extends ArcanistUnitTestEngine {
                     tempnam(sys_get_temp_dir(), 'arctestresults.phab');
 
             // Get config file
-            $config_file = parse_ini_file("xunit.ini", true);
-            $sln = $config_file["msbuild"]["solution_path"];
-            $runner = $config_file["unit_tests"]["xunit_runner_path"];
-            $testproject = $config_file["unit_tests"]["test_project_dll"];
-            $traits = $config_file["unit_tests"]["xunit_traits"];
+            $config_file = parse_ini_file('xunit.ini', true);
+            $sln = $config_file['msbuild']['solution_path'];
+            $runner = $config_file['unit_tests']['xunit_runner_path'];
+            $testproject = $config_file['unit_tests']['test_project_dll'];
+            $traits = $config_file['unit_tests']['xunit_traits'];
 
             // Try to build. If msbuild isn't in the path it will fail silently
             // and run tests against the last compiled version
-            $build_output = shell_exec("msbuild " . $sln .
-                    " /verbosity:minimal");
+            $build_output = shell_exec('msbuild '.$sln.
+                    ' /verbosity:minimal');
 
-            //run unit tests
-            shell_exec($runner . ' ' . $testproject . ' ' . $traits .
-                    ' -json -nologo > ' . $result_location );
+            // run unit tests
+            shell_exec($runner.' '.$testproject.' '.$traits.
+                    ' -json -nologo > '.$result_location);
             $test_results =
                     file($result_location);
 
@@ -183,14 +183,14 @@ final class MobileUnitTestEngine extends ArcanistUnitTestEngine {
                 foreach ($properties as $item) {
                     if (strpos($item, 'android.library.reference') !== false) {
                         $library_path = substr($item, strpos($item, '=') + 1);
-                        $library_path = realpath(chop($library_path));
+                        $library_path = realpath(rtrim($library_path));
                         array_push($library_paths, $library_path);
                     }
                 }
                 if (count($library_paths) > 0) {
                     foreach ($library_paths as $library_path) {
                         chdir($library_path);
-                        list ($err, $stdout, $stderr) =
+                        list($err, $stdout, $stderr) =
                                 exec_manual('android update project --path . --subprojects');
                     }
                 }
@@ -278,7 +278,8 @@ final class MobileUnitTestEngine extends ArcanistUnitTestEngine {
             $descriptorspec = array(
                 0 => array('pipe', 'r'),
                 1 => array('pipe', 'w'),
-                2 => array('pipe', 'w'));
+                2 => array('pipe', 'w'),
+            );
             $result_array = array();
             foreach ($android_test_paths as $path) {
                 chdir($path.'/tests');
@@ -478,19 +479,20 @@ final class MobileUnitTestEngine extends ArcanistUnitTestEngine {
           // failures that blow up json parsing
           $test_result_item = preg_replace('/[\x00-\x1F\x7F]/',
                   '', $test_result_item);
-          //convert to utf8 then deserialize
-          $message = json_decode( utf8_encode($test_result_item), true);
+          // convert to utf8 then deserialize
+          $message = json_decode(utf8_encode($test_result_item), true);
 
           // Xunit passing results have 0 valuable information
           // and all we really care about are failures
-          if($message['message'] == 'testFailed')
-          {
+          if ($message['message'] == 'testFailed') {
             $result = new ArcanistUnitTestResult();
             $result->setResult(ArcanistUnitTestResult::RESULT_FAIL);
             $result->setName($message['testName']);
             $result->setUserData($message['errorMessages']);
-            $result->setExtraData(array("stacktraces",
-                    $message['stackTraces']));
+            $result->setExtraData(array(
+            'stacktraces',
+                    $message['stackTraces'],
+            ));
             array_push($result_array, $result);
           }
         }
@@ -509,7 +511,7 @@ final class MobileUnitTestEngine extends ArcanistUnitTestEngine {
         }
 
         // Return Args as string, escaping the option values
-        for ($x = 0; $x < sizeOf($buildargs); $x++) {
+        for ($x = 0; $x < count($buildargs); $x++) {
             if ($x % 2 == 0) {
                 // Code coverage relies on the main target, not the unit tests
                 // so we must filter out anything that directs xcodebuild to
