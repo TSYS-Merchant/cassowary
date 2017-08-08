@@ -477,14 +477,14 @@ final class MobileUnitTestEngine extends ArcanistUnitTestEngine {
             $result = new ArcanistUnitTestResult();
             $result->setResult(ArcanistUnitTestResult::RESULT_PASS);
 
-           $result_name = (string)$xunit_result['name'];
-           if (strlen($result_name) > 200) {
-               $result_name = substr($result_name, 0, 200);
-           }
+            $result_name = (string)$xunit_result['name'];
+            if (strlen($result_name) > 200) {
+                $result_name = substr($result_name, 0, 200);
+            }
 
-           $result->setName($result_name);
+            $result->setName($result_name);
 
-           $result->setDuration((float)$xunit_result['time']);
+            $result->setDuration((float)$xunit_result['time']);
 
             if ($xunit_result['result'] == 'Fail') {
                 $result->setResult(ArcanistUnitTestResult::RESULT_FAIL);
