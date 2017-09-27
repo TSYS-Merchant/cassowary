@@ -70,7 +70,7 @@ As of right now only basic support is available but simple naming and text compl
 License / Support
 =================
 
-Copyright 2012-2015 iMobile3, LLC. All rights reserved.
+Copyright 2012-2017 iMobile3, LLC. All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
 modification, is permitted provided that adherence to the following
