@@ -459,6 +459,7 @@ final class MobileUnitTestEngine extends ArcanistUnitTestEngine {
             $result = new ArcanistUnitTestResult();
             $result->setResult($test_result_item['result']);
             $result->setName($test_result_item['name']);
+            $result->setDuration((float)$test_result_item['duration']);
             $result->setUserData($test_result_item['userdata']);
             $result->setExtraData($test_result_item['extra']);
             $result->setLink($test_result_item['link']);
