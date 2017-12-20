@@ -92,14 +92,6 @@ final class ArcanistReSharperLinter extends ArcanistLinter {
                 . "output version. Please update to the latest version.");
             }
 
-            if ($filexml->attributes()->ToolsVersion < 103.0) {
-                throw new ArcanistUsageException("Unsupported Command Line Tools "
-                . "output version. Please update to the latest version.");
-            } else if ($filexml->attributes()->ToolsVersion > 103.0) {
-                throw new ArcanistUsageException("Unsupported Command Line Tools "
-                . "output version. Cassowary needs an update to match.");
-            }
-
             $severity_map = array();
             $name_map = array();
             foreach ($filexml->xpath('//IssueType') as $issue_type) {
