@@ -77,9 +77,14 @@ final class MobileUnitTestEngine extends ArcanistUnitTestEngine {
 
             // Checking all levels of path
             do {
-                // Project root should have gradlew batch file
+
+                // module should contain an .iml file
+                // and a build.gradle file
+                // and we only want modules that have unit tests
                 // Only add path once per project
-                if (file_exists($root_path.'/gradlew')
+                if (count(glob($root_path.'/*.iml')) > 0
+                        && file_exists($root_path.'/build.gradle')
+                        && file_exists($root_path.'/src/test')
                         && !in_array($root_path, $android_test_paths)) {
 
                     array_push($android_test_paths, $root_path);
@@ -196,7 +201,8 @@ final class MobileUnitTestEngine extends ArcanistUnitTestEngine {
 
                 $start_time = microtime(true);
 
-                passthru('./gradlew test', $return_value);
+                $cmd = "./gradlew $module:test";
+                passthru($cmd, $return_value);
 
                 $end_time = microtime(true);
 
