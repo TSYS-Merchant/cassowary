@@ -56,6 +56,7 @@ final class MobileUnitTestEngine extends ArcanistUnitTestEngine {
 
             // Checking all levels of path
             do {
+                $initial_path = $root_path;
                 // Project root should have .xctool-args
                 // Only add path once per project
                 if (file_exists($root_path.'/.xctool-args')
@@ -64,11 +65,11 @@ final class MobileUnitTestEngine extends ArcanistUnitTestEngine {
                     array_push($ios_test_paths, $root_path);
                 }
 
-                // Stripping last level
-                $last = strrchr($root_path, '/');
-                $root_path = substr_replace($root_path, '',
-                    strrpos($root_path, $last), strlen($last));
-            } while ($last);
+                $parent_dir = realpath(dirname($root_path));
+                if ($parent_dir != '') {
+                    $root_path = $parent_dir;
+                }
+            } while ($initial_path != $parent_dir);
         }
 
         // Android (gradle)
@@ -89,11 +90,10 @@ final class MobileUnitTestEngine extends ArcanistUnitTestEngine {
                     array_push($android_test_paths, $root_path);
                 }
 
-                $parent_dir = dirname($root_path);
+                $parent_dir = realpath(dirname($root_path));
                 if ($parent_dir != '') {
                     $root_path = $parent_dir;
                 }
-
             } while ($initial_path != $parent_dir);
         }
 
@@ -103,6 +103,7 @@ final class MobileUnitTestEngine extends ArcanistUnitTestEngine {
 
             // Checking all levels of path
             do {
+                $initial_path = $root_path;
                 // Project root should have .xunit-args
                 // Only add path once per project
                 if (file_exists($root_path.'/.xunit-args')
@@ -111,11 +112,11 @@ final class MobileUnitTestEngine extends ArcanistUnitTestEngine {
                     array_push($dotnet_test_paths, $root_path);
                 }
 
-                // Stripping last level
-                $last = strrchr($root_path, '/');
-                $root_path = substr_replace($root_path, '',
-                    strrpos($root_path, $last), strlen($last));
-            } while ($last);
+                $parent_dir = realpath(dirname($root_path));
+                if ($parent_dir != '') {
+                    $root_path = $parent_dir;
+                }
+            } while ($initial_path != $parent_dir);
         }
 
         // Checking to see if no paths were added
@@ -165,14 +166,22 @@ final class MobileUnitTestEngine extends ArcanistUnitTestEngine {
             $runner = $config_file['xunit_runner_path'];
             $test_projects = $config_file['test_project_paths'];
             $traits = $config_file['xunit_traits'];
+            $is_dotnet_core = $config_file['is_dotnet_core'];
 
             // run unit tests, by project
             foreach ($test_projects as $test_project) {
                 $result_location =
                 tempnam(sys_get_temp_dir(), 'arctestresults.phab');
 
-                shell_exec($runner.' '.$test_project.' '.$traits.
-                ' -quiet -xml '.$result_location);
+                if ($is_dotnet_core) {
+                    $command = $runner.' '.realpath($test_project).' '.$traits.
+                        ' -a:. -l:"xunit;LogFilePath='.$result_location.'"';
+                } else {
+                    $command = $runner.' '.$test_project.' '.$traits.
+                        ' -quiet -xml '.$result_location;
+                }
+
+                shell_exec($command);
                 $test_results = file_get_contents($result_location);
 
                 unlink($result_location);
@@ -199,7 +208,7 @@ final class MobileUnitTestEngine extends ArcanistUnitTestEngine {
             foreach ($android_test_paths as $path) {
                 $cmd = ':'.basename($path);
                 do {
-                    $parent_dir = dirname($path);
+                    $parent_dir = realpath(dirname($path));
                     // In case Application module is organized by folder E.g:
                     // hardware:swiper
                     if (!$this->isAndroidProjectRootDirectory($parent_dir)) {
@@ -367,6 +376,10 @@ final class MobileUnitTestEngine extends ArcanistUnitTestEngine {
 
         // Iterate through xunit results and locate passes / failures
         $xml = simplexml_load_string($test_results);
+        if (!$xml) {
+            return $result_array;
+        }
+
         $xunit_result_array = $xml->xpath('//test');
 
         foreach ($xunit_result_array as $key => $xunit_result) {
