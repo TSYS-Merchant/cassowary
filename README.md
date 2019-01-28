@@ -65,12 +65,20 @@ The Android developer tools provide linting and unit test capabilities out of th
 .NET Linting and Unit Testing
 -----------------------------
 
-As of right now only basic support is available but simple naming and text compliance checks are included for .NET projects (focusing towards MVC and Windows Phone 7 / 8).
+`libcassowary` uses the [ReSharper Command Line Tools][6] for linting. To install them just run:
+
+```bash
+choco install resharper-clt
+```
+
+The .NET linter invokes the full ReSharper suite and can utilize any local configuration you have in place in your solution(s).
+
+.NET unit testing supports both classic .NET and .NET Core.
 
 License / Support
 =================
 
-Copyright 2012-2017 iMobile3, LLC. All rights reserved.
+Copyright 2012-2019 iMobile3, LLC. All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
 modification, is permitted provided that adherence to the following
@@ -95,7 +103,7 @@ LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE
 OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-All contributions are welcome to improve the tools for more efficient, quality mobile development. Additional tools for code coverage, linting, and more provided graciously by [JetBrains][6] and their suite of applications and plugins under their open source support program.
+All contributions are welcome to improve the tools for more efficient, quality mobile development.
 
 [0]: http://github.com/facebook/libphutil
 [1]: http://github.com/facebook/arcanist
@@ -103,4 +111,4 @@ All contributions are welcome to improve the tools for more efficient, quality m
 [3]: http://oclint.org
 [4]: http://docs.oclint.org/en/dev/usage/oclint.html
 [5]: http://github.com/facebook/xctool
-[6]: http://www.jetbrains.com/
+[6]: https://www.jetbrains.com/resharper/features/command-line.html
