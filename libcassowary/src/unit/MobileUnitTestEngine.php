@@ -1,7 +1,7 @@
 <?php
 
 /*
-Copyright 2012-2018 iMobile3, LLC. All rights reserved.
+Copyright 2012-2019 iMobile3, LLC. All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
 modification, is permitted provided that adherence to the following
@@ -166,7 +166,11 @@ final class MobileUnitTestEngine extends ArcanistUnitTestEngine {
             $runner = $config_file['xunit_runner_path'];
             $test_projects = $config_file['test_project_paths'];
             $traits = $config_file['xunit_traits'];
-            $is_dotnet_core = $config_file['is_dotnet_core'];
+            $is_dotnet_core = false;
+
+            if (isset($config_file['is_dotnet_core'])) {
+                $is_dotnet_core = $config_file['is_dotnet_core'];
+            }
 
             // run unit tests, by project
             foreach ($test_projects as $test_project) {
