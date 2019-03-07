@@ -2,7 +2,7 @@
 
 /*
 
-Copyright 2012-2017 iMobile3, LLC. All rights reserved.
+Copyright 2012-2019 iMobile3, LLC. All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
 modification, is permitted provided that adherence to the following
@@ -40,7 +40,7 @@ final class MobileLintEngine extends ArcanistLintEngine {
         $linters = array();
         $paths = $this->getPaths();
 
-        $ios_paths = preg_grep('/\.(h|m|sh|pch|png|xib|jpg)$/', $paths);
+        $ios_paths = preg_grep('/\.(swift|h|m|sh|pch|png|xib|jpg)$/', $paths);
         $linters[] = id(new ArcanistOCFilenameLinter())->setPaths($ios_paths);
 
         $non_ios_paths = preg_grep('/\.(h|m|sh|pch|png|xib|jpg)$/', $paths,
@@ -55,7 +55,8 @@ final class MobileLintEngine extends ArcanistLintEngine {
         }
 
         $text_paths =
-                preg_grep('/\.(cs|cshtml|vb|vbhtml|sql|h|m|sh|pch|java|xml|php|css|js)$/',
+                preg_grep('/\.(cs|cshtml|vb|swift|vbhtml|sql|h|m|sh|pch|java'
+                          .'|xml|php|css|js)$/',
                     $paths);
         $linters[] = id(new ArcanistMobileGeneratedLinter())
                 ->setPaths($text_paths);
@@ -79,7 +80,9 @@ final class MobileLintEngine extends ArcanistLintEngine {
         $ios_implementation_paths = preg_grep('/\.m$/', $paths);
         $linters[] =
                 id(new ArcanistOCLinter())->setPaths($ios_implementation_paths);
-
+        $ios_implementation_paths = preg_grep('/\.swift$/', $paths);
+        $linters[] =
+                id(new ArcanistSwiftLinter())->setPaths($ios_implementation_paths);
         $ios_project_paths = preg_grep('/\.pbxproj$/', $paths);
         $linters[] =
                 id(new ArcanistOCProjectLinter())->setPaths($ios_project_paths);
