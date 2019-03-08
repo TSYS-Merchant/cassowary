@@ -137,17 +137,15 @@ final class MobileUnitTestEngine extends ArcanistUnitTestEngine {
         foreach ($ios_test_paths as $path) {
             chdir($path);
 
-            $result_location =
-                    tempnam(sys_get_temp_dir(), 'arctestresults.phab');
-
             $xcodebuild_params = $this->getXcodebuildArgs();
             exec('xcodebuild '.$xcodebuild_params.' build-for-testing');
 
-            exec('xctool -reporter phabricator:'
-            .$result_location.' run-tests');
+            $results = array();
+            exec('xctool -reporter phabricator run-tests', $results);
+            $output = implode("\n", $results);
+
             $test_results =
-                    json_decode(file_get_contents($result_location), true);
-            unlink($result_location);
+                    json_decode(implode("\n", $results), true);
 
             $test_result = $this->parseiOSOutput($test_results);
 
@@ -444,12 +442,6 @@ final class MobileUnitTestEngine extends ArcanistUnitTestEngine {
                 }
             }
         }
-        // Append required -arch flag where -destination or -arch is not set
-        $destination_not_in_args = !in_array('-destination', $buildargs, false);
-        $architecture_not_in_args = !in_array('-arch', $buildargs, false);
-        if ($destination_not_in_args && $architecture_not_in_args) {
-            array_push($buildargs, '-arch', 'i386');
-        }
         return implode(' ', $buildargs);
     }
 
@@ -478,12 +470,6 @@ final class MobileUnitTestEngine extends ArcanistUnitTestEngine {
                     $buildargs[$x] = escapeshellarg($buildargs[$x]);
                 }
             }
-        }
-        // Append required -arch flag where -destination or -arch is not set
-        $destination_not_in_args = !in_array('-destination', $buildargs, false);
-        $architecture_not_in_args = !in_array('-arch', $buildargs, false);
-        if ($destination_not_in_args && $architecture_not_in_args) {
-            array_push($buildargs, '-arch', 'i386');
         }
         return implode(' ', $buildargs);
     }
