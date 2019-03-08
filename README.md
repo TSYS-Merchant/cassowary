@@ -26,9 +26,11 @@ To use libcassowary edit your `.arcconfig` to look something like this:
 
 You will need to clone this repository to somewhere in your project structure. iOS projects should use OCLintEngine and OCUnitTestEngine for linting and unit testing respectively. Android projects should use AndroidLintEngine and AndroidTestEngine. .NET projects should use DotNetLintEngine. If you need support for several platforms in a hybrid repository, use MobileLintEngine and MobileUnitTestEngine.
 
+___
 iOS Linting and Unit Testing
 ----------------------------
-
+`objc`
+--
 `libcassowary` uses [OCLint][3] for linting Objective-C implementation files. Since OCLint is configurable and needs to know some information about the Xcode project being linted, a file `oclint.sh` must exist in any root project directory that wishes to have its files linted. A sample file is as follows:
 
 ```bash
@@ -46,7 +48,6 @@ done
 
 oclint $1 -- -x objective-c -arch $ARCH -F . -isysroot $SYSROOT -g -I$INCLUDES -include $PCH_PATH -c
 ```
-
 It may be necessary to edit this script based on your project needs and structure. See the [command line documentation][4] for more info.
 
 The iOS linter looks for this file and uses it as a reference point for linting individual files so make sure it exists otherwise no linting will occur.
@@ -56,12 +57,82 @@ iOS unit testing leverages the OCUnit testing framework provided within Xcode an
 ```bash
 brew install xctool
 ```
+`swift`
+---
+Swift linting uses the `swiftlint` project. Please refer to [SwiftLint][7] for rule setup documentation. `swiftlint` can be installed via homebrew.
 
+```bash
+brew install swiftlint
+```
+See [SwiftLint][7] for additional install methods if `brew` is not supported in your environment
+
+Configuration
+-
+`libcassowary` requires a `.swiftlint.yml` file in the project root folder. This file must be configured to output json.
+
+```YAML
+#sample .swiftlint.yml file
+disabled_rules: # rule identifiers to exclude from running
+
+opt_in_rules: # some rules are only opt-in
+
+included: # paths to include during linting. `--path` is ignored if present.
+- Source
+
+excluded: # paths to ignore during linting. Takes precedence over `included`.
+- Pods
+
+analyzer_rules: # Rules run by `swiftlint analyze` (experimental)
+- explicit_self
+
+# configurable rules can be customized from this configuration file
+# binary rules can set their severity level
+unneeded_break_in_switch: error
+opening_brace: error
+comma: error
+control_statement: error
+colon:
+severity: error
+flexible_right_spacing: false
+apply_to_dictionaries: true
+# rules that have both warning and error levels, can set just the warning level
+# implicitly
+line_length:
+- 120
+- 140
+# they can set both implicitly with an array
+type_body_length:
+- 300 # warning
+- 400 # error
+# or they can set both explicitly
+file_length:
+warning: 500
+error: 1200
+# naming rules can set warnings/errors for min_length and max_length
+# additionally they can set excluded names
+type_name:
+min_length: 3 # only warning
+max_length: # warning and error
+warning: 40
+error: 50
+excluded: iPhone # excluded via string
+identifier_name:
+min_length: # only min_length
+error: 3 # only error
+excluded: # excluded via string array
+- id
+- URL
+- GlobalAPIKey
+reporter: "json" # reporter type (xcode, json, csv, checkstyle, junit, html, emoji, sonarqube, markdown)
+
+```
+___
 Android Linting and Unit Testing
 --------------------------------
 
 The Android developer tools provide linting and unit test capabilities out of the box. The Android lint tool will be automatically invoked for any XML or Java files if configured. For unit testing, all tests within a directory `tests` will be executed for an application. The Android unit tester does assume that a device is connected to execute the tests on.
 
+___
 .NET Linting and Unit Testing
 -----------------------------
 
@@ -75,6 +146,7 @@ The .NET linter invokes the full ReSharper suite and can utilize any local confi
 
 .NET unit testing supports both classic .NET and .NET Core.
 
+___
 License / Support
 =================
 
@@ -112,3 +184,4 @@ All contributions are welcome to improve the tools for more efficient, quality m
 [4]: http://docs.oclint.org/en/dev/usage/oclint.html
 [5]: http://github.com/facebook/xctool
 [6]: https://www.jetbrains.com/resharper/features/command-line.html
+[7]: https://github.com/realm/SwiftLint/blob/master/README.md
