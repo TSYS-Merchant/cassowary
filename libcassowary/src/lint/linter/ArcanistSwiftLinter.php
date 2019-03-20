@@ -91,18 +91,17 @@ final class ArcanistSwiftLinter extends ArcanistLinter {
         try {
             $stdout = array();
             $_ = 0;
-            exec('cd $current_directory && swiftlint lint $path_on_disk '
-                 .'--reporter json',
+            exec("cd $current_directory && swiftlint lint "
+                 ."$path_on_disk --reporter json",
                  $stdout,
                  $_);
-            } catch (CommandException $e) {
+        } catch (CommandException $e) {
             $stdout = $e->getStdout();
         }
         $data = json_decode(implode('', $stdout), true);
         if ($data == null) {
-            throw new ArcanistUsageException('swiftlint does not appear to be '
-                                             .'configured or failed to output '
-                                             .' json results.');
+            // If data is null, that means there were no errors so just return
+            return;
         }
 
         foreach ($data as $line) {
