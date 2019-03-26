@@ -55,21 +55,17 @@ final class MobileUnitTestEngine extends ArcanistUnitTestEngine {
             $root_path = $this->projectRoot.'/'.$path;
 
             // Checking all levels of path
-            do {
-                $initial_path = $root_path;
+            while ($root_path != $this->projectRoot) {
                 // Project root should have .xctool-args
                 // Only add path once per project
                 if (file_exists($root_path.'/.xctool-args')
-                        && !in_array($root_path, $ios_test_paths)
-                ) {
+                          && !in_array($root_path, $ios_test_paths)
+                  ) {
                     array_push($ios_test_paths, $root_path);
                 }
 
-                $parent_dir = realpath(dirname($root_path));
-                if ($parent_dir != '') {
-                    $root_path = $parent_dir;
-                }
-            } while ($initial_path != $parent_dir);
+                $root_path = dirname($root_path);
+            }
         }
 
         // Android (gradle)
@@ -77,8 +73,7 @@ final class MobileUnitTestEngine extends ArcanistUnitTestEngine {
             $root_path = $this->projectRoot.'/'.$path;
 
             // Checking all levels of path
-            do {
-                $initial_path = $root_path;
+            while ($root_path != $this->projectRoot) {
                 // module should contain an .iml file
                 // and a build.gradle file
                 // and we only want modules that have unit tests
@@ -89,12 +84,9 @@ final class MobileUnitTestEngine extends ArcanistUnitTestEngine {
                         && !in_array($root_path, $android_test_paths)) {
                     array_push($android_test_paths, $root_path);
                 }
-
-                $parent_dir = realpath(dirname($root_path));
-                if ($parent_dir != '') {
-                    $root_path = $parent_dir;
-                }
-            } while ($initial_path != $parent_dir);
+                
+                $root_path = dirname($root_path);
+            }
         }
 
         // .NET
@@ -102,8 +94,7 @@ final class MobileUnitTestEngine extends ArcanistUnitTestEngine {
             $root_path = $this->projectRoot.'/'.$path;
 
             // Checking all levels of path
-            do {
-                $initial_path = $root_path;
+            while ($root_path != $this->projectRoot) {
                 // Project root should have .xunit-args
                 // Only add path once per project
                 if (file_exists($root_path.'/.xunit-args')
@@ -112,11 +103,8 @@ final class MobileUnitTestEngine extends ArcanistUnitTestEngine {
                     array_push($dotnet_test_paths, $root_path);
                 }
 
-                $parent_dir = realpath(dirname($root_path));
-                if ($parent_dir != '') {
-                    $root_path = $parent_dir;
-                }
-            } while ($initial_path != $parent_dir);
+                $root_path = dirname($root_path);
+            }
         }
 
         // Checking to see if no paths were added
@@ -272,7 +260,7 @@ final class MobileUnitTestEngine extends ArcanistUnitTestEngine {
                 && count(glob($module_path.'/build.gradle')) == 1
                 && count(glob($module_path.'/settings.gradle')) == 1
                 && count(glob($module_path.'/gradlew')) == 1) {
-                    $is_android_root_directory = true;
+                $is_android_root_directory = true;
             }
         }
 
@@ -329,8 +317,10 @@ final class MobileUnitTestEngine extends ArcanistUnitTestEngine {
 
             foreach (file($gcov_filename) as $gcov_line) {
                 $gcov_matches = array();
-                if ($g = preg_match_all('/.*?(.):.*?(\\d+)/is', $gcov_line,
-                            $gcov_matches)
+                if ($g = preg_match_all(
+                    '/.*?(.):.*?(\\d+)/is',
+                    $gcov_line,
+                    $gcov_matches)
                         && $gcov_matches[2][0] > 0
                 ) {
                     if ($gcov_matches[1][0] === '#'
