@@ -86,6 +86,12 @@ final class MobileLintEngine extends ArcanistLintEngine {
         $ios_project_paths = preg_grep('/\.pbxproj$/', $paths);
         $linters[] =
                 id(new ArcanistOCProjectLinter())->setPaths($ios_project_paths);
+        $json_paths = preg_grep('/\.(json)$/', $paths);
+        $linters[] =
+                id(new ArcanistJSONLinter())->setPaths($json_paths);
+        $xml_paths = preg_grep('/\.(xml)$/', $paths);
+        $linters[] =
+                id(new ArcanistXMLLinter())->setPaths($xml_paths);
 
         // locate project directories and run static analysis
         if (count($ios_implementation_paths) > 0) {
@@ -201,7 +207,8 @@ final class MobileLintEngine extends ArcanistLintEngine {
             }
         }
 
-        $dotnet_paths = preg_grep('/\.(cs|cshtml|vb|vbhtml|sql)$/', $paths);
+        $dotnet_paths = preg_grep('/\.(cs|cshtml|vb|vbhtml'.
+                                  '|aspx|xaml|ts|css|resx)$/', $paths);
         $linters[] = id(new ArcanistTextLinter())->setPaths($dotnet_paths)
                 ->setCustomSeverityMap(
                     array(
