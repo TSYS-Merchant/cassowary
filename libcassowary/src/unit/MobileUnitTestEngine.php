@@ -55,7 +55,7 @@ final class MobileUnitTestEngine extends ArcanistUnitTestEngine {
             $root_path = $this->projectRoot.'/'.$path;
 
             // Checking all levels of path
-            while ($root_path != $this->projectRoot) {
+            while ($root_path != dirname($this->projectRoot)) {
                 // Project root should have .xctool-args
                 // Only add path once per project
                 if (file_exists($root_path.'/.xctool-args')
@@ -73,7 +73,7 @@ final class MobileUnitTestEngine extends ArcanistUnitTestEngine {
             $root_path = $this->projectRoot.'/'.$path;
 
             // Checking all levels of path
-            while ($root_path != $this->projectRoot) {
+            while ($root_path != dirname($this->projectRoot)) {
                 // module should contain an .iml file
                 // and a build.gradle file
                 // and we only want modules that have unit tests
@@ -94,7 +94,7 @@ final class MobileUnitTestEngine extends ArcanistUnitTestEngine {
             $root_path = $this->projectRoot.'/'.$path;
 
             // Checking all levels of path
-            while ($root_path != $this->projectRoot) {
+            while ($root_path != dirname($this->projectRoot)) {
                 // Project root should have .xunit-args
                 // Only add path once per project
                 if (file_exists($root_path.'/.xunit-args')
