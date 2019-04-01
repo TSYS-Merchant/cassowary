@@ -208,7 +208,18 @@ final class MobileUnitTestEngine extends ArcanistUnitTestEngine {
                 } while (!$this->isAndroidProjectRootDirectory($parent_dir));
 
                 $module = $cmd;
-                $cmd = './gradlew '.$cmd.':test';
+                $cmd = './gradlew';
+
+                $variants = $this->getTestVariants();
+
+                if (!empty($variants)) {
+                    foreach ($variants as $variant) {
+                        $cmd .= ' '.$module.':test'.$variant;
+                    }
+                } else {
+                    $cmd .= ' '.$module.':test';
+                }
+
                 $start_time = microtime(true);
 
                 passthru($cmd, $return_value);
@@ -466,5 +477,23 @@ final class MobileUnitTestEngine extends ArcanistUnitTestEngine {
 
     public function shouldEchoTestResults() {
         return !$this->androidOnly;
+    }
+
+    // Return restricted list of build variants for testing
+    private function getTestVariants() {
+        $project_root = $this->getWorkingCopy()->getProjectRoot();
+        $arcunit_path = $project_root.'/.arcunit';
+        $arcunit_variants_key = 'testVariants';
+
+        if (!file_exists($arcunit_path)) {
+            return null;
+        }
+
+        // Decode .arcunit settings
+        $arcunit = json_decode(file_get_contents($arcunit_path), true);
+
+        $arcunit_variants = $arcunit[$arcunit_variants_key];
+
+        return $arcunit_variants;
     }
 }
