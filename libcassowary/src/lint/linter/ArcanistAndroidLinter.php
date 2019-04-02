@@ -205,9 +205,6 @@ final class ArcanistAndroidLinter extends ArcanistLinter {
                         ArcanistLintSeverity::SEVERITY_ADVICE);
                 }
 
-                // Skip line number check, since we're linting the whole project
-                $message->setBypassChangedLineFiltering(true);
-
                 $messages[$message->getPath().':'
                 .$message->getLine().':'
                 .$message->getChar().':'

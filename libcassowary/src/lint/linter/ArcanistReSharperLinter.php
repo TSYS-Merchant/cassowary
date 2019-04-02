@@ -136,7 +136,6 @@ final class ArcanistReSharperLinter extends ArcanistLinter {
                 $message->setDescription((string)$issue->attributes()->Message);
                 $message->setSeverity(
                     $severity_map[(string)$issue->attributes()->TypeId]);
-                $message->setBypassChangedLineFiltering(true);
 
                 if (!array_key_exists($linted_file, $this->allLintResults)) {
                     $this->allLintResults[$linted_file] = array();
