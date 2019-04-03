@@ -107,8 +107,9 @@ final class ArcanistReSharperLinter extends ArcanistLinter {
                 }
 
                 $name_map[(string)$issue_type->attributes()->Id] =
-                        $issue_type->attributes()->Description
-                        ?? $issue_type->attributes()->Category;
+                        empty($issue_type->attributes()->Description)
+                        ? $issue_type->attributes()->Category
+                        : $issue_type->attributes()->Description;
 
             }
 
