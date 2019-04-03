@@ -92,6 +92,12 @@ final class MobileLintEngine extends ArcanistLintEngine {
         $xml_paths = preg_grep('/\.(xml)$/', $paths);
         $linters[] =
                 id(new ArcanistXMLLinter())->setPaths($xml_paths);
+        $js_paths = preg_grep('/\.(js)$/', $paths);
+        $linters[] =
+                id(new ArcanistJSHintLinter())->setPaths($js_paths);
+        $css_paths = preg_grep('/\.(css)$/', $paths);
+        $linters[] =
+                id(new ArcanistCSSLintLinter())->setPaths($css_paths);
 
         // locate project directories and run static analysis
         if (count($ios_implementation_paths) > 0) {
