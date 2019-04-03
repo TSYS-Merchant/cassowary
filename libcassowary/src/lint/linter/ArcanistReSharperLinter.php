@@ -63,9 +63,9 @@ final class ArcanistReSharperLinter extends ArcanistLinter {
                         continue;
                     }
 
-                    // if a .sln file can be found we know
+                    // if a .csproj file can be found we know
                     // we're in the correct place
-                    if ($file->getExtension() == 'sln') {
+                    if ($file->getExtension() == 'csproj') {
                         $analysis_path = $file->getPathname();
                     }
                 }
@@ -84,7 +84,8 @@ final class ArcanistReSharperLinter extends ArcanistLinter {
             $lint_output = tempnam(sys_get_temp_dir(), 'arclint.xml');
             $path_on_disk = $this->getEngine()->getFilePathOnDisk($path);
 
-            execx('inspectcode /o=%s /no-swea %s', $lint_output, $path_on_disk);
+            execx('inspectcode /o=%s /no-swea %s --verbosity=OFF',
+                  $lint_output, $path_on_disk);
 
             $filexml = simplexml_load_string(file_get_contents($lint_output));
             if (empty($filexml)) {
