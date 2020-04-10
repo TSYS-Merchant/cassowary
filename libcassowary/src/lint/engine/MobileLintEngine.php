@@ -146,6 +146,8 @@ final class MobileLintEngine extends ArcanistLintEngine {
         $linters[] = id(new ArcanistTextLinter())->setPaths($android_paths)
                 ->setCustomSeverityMap(
                     array(
+                        ArcanistTextLinter::LINT_BAD_CHARSET =>
+                        ArcanistLintSeverity::SEVERITY_DISABLED,
                         ArcanistTextLinter::LINT_LINE_WRAP =>
                         ArcanistLintSeverity::SEVERITY_ADVICE,
                     ))->setMaxLineLength($lintsetting_maxlinelength);
