@@ -226,7 +226,7 @@ final class MobileLintEngine extends ArcanistLintEngine {
                         ArcanistLintSeverity::SEVERITY_ADVICE,
                     ))->setMaxLineLength($lintsetting_maxlinelengthlong);
 
-        $web_paths = preg_grep('/\.(php|css|js)$/', $paths);
+        $web_paths = preg_grep('/\.(php|css|js|java|xml)$/', $paths);
         $linters[] = id(new ArcanistTextLinter())->setPaths($web_paths)
                 ->setCustomSeverityMap(
                     array(
