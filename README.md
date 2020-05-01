@@ -147,6 +147,20 @@ The .NET linter invokes the full ReSharper suite and can utilize any local confi
 .NET unit testing supports both classic .NET and .NET Core.
 
 ___
+Development and Maintenance
+--------------------------------
+
+## Apache NetBeans IDE 11.3 Setup
+NetBeans Download: https://netbeans.apache.org/download/index.html  
+
+Set `Run Configuration` to `Run As: Script (run in command line)`  
+
+* For Linux / Unix: Set `PHP Interpreter` to `/usr/bin/php`  
+* For Windows: Set the interpreter to your `php.exe` file  
+
+You can specify PHP Version 7.4 and use Default Encoding UTF-8.  
+
+___
 License / Support
 =================
 
