@@ -3,3 +3,9 @@ libcassowary/src/.phutil_module_cache
 libcassowary/support/lint/android/bin/*
 libcassowary/support/lint/android/.classpath
 libcassowary/support/lint/android/.project
+
+# Mac Files
+.DS_Store
+
+# Apache NetBeans IDE
+nbproject/
