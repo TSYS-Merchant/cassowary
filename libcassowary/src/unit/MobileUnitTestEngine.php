@@ -74,7 +74,7 @@ final class MobileUnitTestEngine extends ArcanistUnitTestEngine {
 
             // Checking all levels of path
             while ($root_path != dirname($this->projectRoot)) {
-                // and a build.gradle file
+                // module should contain a build.gradle file
                 // and we only want modules that have unit tests
                 // Only add path once per project
                 if (file_exists($root_path.'/build.gradle')
