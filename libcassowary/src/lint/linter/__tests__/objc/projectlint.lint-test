@@ -339,32 +339,32 @@
 			};
 			name = Release;
 		};
-		B547139C1AA651F800FE4148 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ARCHS = armv7;
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				INFOPLIST_FILE = BadProject/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 5.0;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				VALID_ARCHS = "armv7 armv7s";
-			};
-			name = Debug;
-		};
-		B547139D1AA651F800FE4148 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ARCHS = armv7;
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				INFOPLIST_FILE = BadProject/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 5.0;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				VALID_ARCHS = "armv7 armv7s";
-			};
-			name = Release;
-		};
+        // B547139C1AA651F800FE4148 /* Debug */ = {
+        //     isa = XCBuildConfiguration;
+        //     buildSettings = {
+        //         ARCHS = armv7;
+        //         ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+        //         INFOPLIST_FILE = BadProject/Info.plist;
+        //         IPHONEOS_DEPLOYMENT_TARGET = 5.0;
+        //         LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+        //         PRODUCT_NAME = "$(TARGET_NAME)";
+        //         VALID_ARCHS = "armv7 armv7s";
+        //     };
+        //     name = Debug;
+        // };
+        // B547139D1AA651F800FE4148 /* Release */ = {
+        //     isa = XCBuildConfiguration;
+        //     buildSettings = {
+        //         ARCHS = armv7;
+        //         ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+        //         INFOPLIST_FILE = BadProject/Info.plist;
+        //         IPHONEOS_DEPLOYMENT_TARGET = 5.0;
+        //         LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+        //         PRODUCT_NAME = "$(TARGET_NAME)";
+        //         VALID_ARCHS = "armv7 armv7s";
+        //     };
+        //     name = Release;
+        // };
 		B547139F1AA651F800FE4148 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -431,6 +431,6 @@
 	};
 	rootObject = B54713701AA651F800FE4148 /* Project object */;
 }
+/* error:348:1 */
+/* error:361:1 */
 ~~~~~~~~~~
-error:348:1
-error:361:1
