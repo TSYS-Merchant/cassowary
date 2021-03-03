@@ -1,0 +1,10 @@
+{
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">MainActivity</string>
+    <string name="utf_8">Impression réussie</string>
+</resources>
+
+}
+~~~~~~~~~~
+error:5:38

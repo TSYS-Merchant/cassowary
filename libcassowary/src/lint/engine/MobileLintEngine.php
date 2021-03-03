@@ -67,6 +67,7 @@ final class MobileLintEngine extends ArcanistLintEngine {
         $lintsettings =  $this->buildLintSettings($lintengine_name);
         $lintsetting_maxlinelength = $lintsettings['text.max-line-length'];
         $lintsetting_maxlinelengthlong = $lintsettings['text.max-line-length.long'];
+        $lintsetting_allowutf8 = $lintsettings['text.allow-utf8'];
 
         $ios_text_paths = preg_grep('/\.(h|m|sh|pch)$/', $paths);
 
@@ -145,14 +146,13 @@ final class MobileLintEngine extends ArcanistLintEngine {
 
         $android_paths = preg_grep('/\.(java|xml|gradle|properties)$/', $paths);
 
-        $linters[] = id(new ArcanistTextLinter())->setPaths($android_paths)
+        $linters[] = id(new ArcanistUTF8TextLinter())->setPaths($android_paths)
                 ->setCustomSeverityMap(
                     array(
-                        ArcanistTextLinter::LINT_BAD_CHARSET =>
-                        ArcanistLintSeverity::SEVERITY_DISABLED,
                         ArcanistTextLinter::LINT_LINE_WRAP =>
                         ArcanistLintSeverity::SEVERITY_ADVICE,
-                    ))->setMaxLineLength($lintsetting_maxlinelength);
+                    ))->setMaxLineLength($lintsetting_maxlinelength)
+                    ->setAllowUTF8($lintsetting_allowutf8);
 
         // locate project directories and run static analysis
         if (count($android_paths) > 0) {
@@ -275,7 +275,14 @@ final class MobileLintEngine extends ArcanistLintEngine {
         $arclint_path = $project_root.'/.arclint';
         $arclint_linters_key = 'linters';
         $arclint_maxlinelength_key = 'text.max-line-length';
-        $lintengine_defaults = array( 'type' => $lintengine_name, $arclint_maxlinelength_key => 120, $arclint_maxlinelength_key.'.long' => 250);
+        $arclint_allowutf8_key = 'text.allow-utf8';
+
+        $lintengine_defaults = array(
+            'type' => $lintengine_name,
+            $arclint_maxlinelength_key => 120,
+            $arclint_maxlinelength_key.'.long' => 250,
+            $arclint_allowutf8_key => false,
+        );
 
         // Write MobileLintEngine .arclint settings if none yet exist
         if (!file_exists($arclint_path)) {
@@ -290,7 +297,8 @@ final class MobileLintEngine extends ArcanistLintEngine {
         $arclinters = $arclint[$arclint_linters_key];
         if (array_key_exists($lintengine_name, $arclinters) == false ) {
             // Honour an existing text.max-line-length rule
-            if (array_key_exists('text', $arclinters) == true && array_key_exists($arclint_maxlinelength_key, $arclinters['text']) == true) {
+            if (array_key_exists('text', $arclinters) == true &&
+                array_key_exists($arclint_maxlinelength_key, $arclinters['text']) == true) {
                 $maxlinelength = $arclinters['text'][$arclint_maxlinelength_key];
                 $lintengine_defaults[$arclint_maxlinelength_key] = $maxlinelength;
             }
@@ -298,6 +306,14 @@ final class MobileLintEngine extends ArcanistLintEngine {
             $arclint[$arclint_linters_key][$lintengine_name] = $lintengine_defaults;
             $arclinters = $arclint[$arclint_linters_key];
             $this->writeLintSettings($arclint, $arclint_path);
+        }
+
+        // If the default UTF-8 setting does not exist in our virtual lint engine,
+        // add it to the in-memory settings collection.
+        if (array_key_exists($arclint_allowutf8_key, $arclinters[$lintengine_name]) == false) {
+            $arclint[$arclint_linters_key][$lintengine_name][$arclint_allowutf8_key] =
+            $lintengine_defaults[$arclint_allowutf8_key];
+            $arclinters = $arclint[$arclint_linters_key];
         }
 
         // Return the linter settings for the given lint engine name
